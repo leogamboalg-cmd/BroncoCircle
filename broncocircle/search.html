@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#174c38">
+  <title>Search · BroncoCircle</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="search.css">
+  <script defer src="search.js"></script>
+</head>
+<body data-page="search">
+  <a class="skip-link" href="#campus-search">Skip to search</a>
+  <svg class="icon-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.3 4.3"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/><rect x="3.5" y="14.5" width="6" height="6" rx="1"/><rect x="14.5" y="14.5" width="6" height="6" rx="1"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4Z"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2m-8 3h2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3m-4 4 4-4 4 4M7 10H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-2"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 21v-3a6.5 6.5 0 0 1 13 0v3m1-16.5a3.5 3.5 0 0 1 0 7M21.5 21v-3a6.5 6.5 0 0 0-3-5.5"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 8-2.5 5.5L8 16l2.5-5.5Z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 3.5l8 7V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1Z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L20 8a3.5 3.5 0 0 0-5-5L4 14Z"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z"/></symbol>
+    <symbol id="i-mountain" viewBox="0 0 40 40"><path d="m3 30 11-17 6 7 6-13 11 23Z"/><path d="m10 19 4 3 4-4m5-5 3 5 3-4"/></symbol>
+  </defs></svg>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="BroncoCircle home">
+        <span class="brand-mark"><svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#f3cc54" d="m5 29 10-17 6 8 5-12 10 21Z"/><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" d="m3 31 12-18 7 9 5-13 11 22M11 20l4 4 4-5m6-5 3 5 2-3"/></svg></span>
+        Bronco<span class="brand-light">Circle</span>
+      </a>
+      <nav class="icon-nav" aria-label="Main navigation">
+        <button class="nav-icon" data-nav="explore" aria-label="Home"><svg class="icon"><use href="#i-home"/></svg></button>
+        <button class="nav-icon nav-icon-plus" id="nav-create" aria-label="Create an event"><svg class="icon"><use href="#i-plus"/></svg></button>
+        <button class="nav-icon active" id="nav-search" aria-label="Search" aria-current="page"><svg class="icon"><use href="#i-search"/></svg></button>
+        <button class="nav-icon" data-nav="going" aria-label="My events"><svg class="icon"><use href="#i-users"/></svg></button>
+        <button class="nav-icon nav-profile" data-nav="profile" aria-label="My profile"></button>
+      </nav>
+    </div>
+    <div class="nav-search-panel" id="nav-search-panel">
+      <label class="search-box"><svg class="icon"><use href="#i-search"/></svg><input id="search" type="search" placeholder="Search friends" aria-label="Search friends"><kbd>/</kbd></label>
+    </div>
+  </header>
+<main class="page-shell">
+<h1 class="sr-only">Search campus</h1>
+<section id="campus-search" class="campus-search" aria-label="Campus search" tabindex="-1">
+  <div class="campus-search-tabs" role="tablist" aria-label="Search type">
+    <button id="campus-friends-tab" type="button" role="tab"
+      aria-selected="true" aria-controls="campus-search-results"
+      data-search-mode="friends">Find friends</button>
+    <button id="campus-events-tab" type="button" role="tab"
+      aria-selected="false" aria-controls="campus-search-results"
+      data-search-mode="events" tabindex="-1">Find events</button>
+  </div>
+  <div id="campus-search-results" class="campus-search-results"
+    role="tabpanel" aria-labelledby="campus-friends-tab"></div>
+  <span class="sr-only" data-search-status role="status" aria-live="polite"></span>
+</section>
+
+</main>
+</body>
+</html>
