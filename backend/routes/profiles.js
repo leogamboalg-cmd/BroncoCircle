@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { getProfiles, getMyProfile, createProfile, updateMyProfile } from '../controllers/profiles.js';
+import { getProfiles, getProfile, getMyProfile, createProfile, updateMyProfile, setFriend } from '../controllers/profiles.js';
 import { requireAccount } from '../middleware/requireAccount.js';
-import { apiHandler } from '../middleware/apiHandler.js';
+import { apiHandler, requireId } from '../middleware/apiHandler.js';
+import { requireProfile } from '../middleware/requireProfile.js';
 
 const router = Router();
 
@@ -11,5 +12,8 @@ router.get('/', apiHandler(getProfiles));
 router.get('/me', apiHandler(getMyProfile));
 router.post('/', apiHandler(createProfile));
 router.patch('/me', apiHandler(updateMyProfile));
+router.get('/:id', requireId, apiHandler(getProfile));
+router.put('/:id/friend', requireProfile, requireId, apiHandler(setFriend));
+router.delete('/:id/friend', requireProfile, requireId, apiHandler(setFriend));
 
 export default router;

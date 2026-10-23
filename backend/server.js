@@ -12,12 +12,9 @@ import { connectModels } from "./models/index.js";
 
 const app = express();
 app.use(express.json());
-app.use(express.static(fileURLToPath(new URL("../frontend/", import.meta.url))));
+app.use(express.static(fileURLToPath(new URL("../broncocircle/", import.meta.url))));
 
 // Connect each URL to its route file.
-app.get("/", (req, res) => {
-  res.json({ message: "BroncoCircle API is running" });
-});
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use("/api/profiles", profiles);
 app.use("/api/posts", posts);

@@ -21,6 +21,9 @@ const eventSchema = new Schema({
   attendees: [{ type: Schema.Types.ObjectId, ref: "Profile" }],
   category: { type: String, trim: true, maxlength: 80 },
   hostNote: { type: String, trim: true, maxlength: 500 },
+  image: { type: String, enum: ["bowling", "hike", "coffee", "pool", "art", "basketball", "guitar", "photography", "picnic"] },
+  imageAlt: { type: String, trim: true, maxlength: 200 },
+  cost: { type: String, trim: true, maxlength: 200 },
 }, { _id: false });
 
 const postSchema = new Schema({

@@ -14,9 +14,15 @@ Restart with `npm start`. No unsigned preset is required. The server uses Cloudi
 
 ## Browser
 
-Open `http://localhost:3000/` (use your configured PORT if different). Express serves the new plain HTML/JS frontend from `../frontend`, so no separate frontend server or CORS setup is needed. `/api/health` and other API endpoints remain available.
-
-Sign up or log in, create your profile if prompted, write a post, and select an optional photo. The page shows a preview. Posting uploads the photo first, then saves the returned URL with the post; feed cards display it. Upload failure preserves your draft and prevents publishing. Removing the photo or leaving it unselected creates a text-only post. Text is still required. The token is stored in sessionStorage for this browser tab; logout clears it locally (it does not revoke the server session).
+Express now serves `broncocircle/`. Its live create-event form has an optional
+photo picker, preview, and Remove photo button. JPEG, PNG, and WebP files up to
+5 MB are uploaded before the event is created. Failure keeps the draft/photo
+selected; a successful upload is reused when retrying a failed event save.
+Events without a selected photo use the default hobby photo. Cloudinary must
+be configured as described above. Static previews keep using hobby photos.
+Open `http://localhost:3000/discover.html`, sign in, and choose Create an event.
+See [website-api.md](./website-api.md) for the current app. The session token
+stays in sessionStorage for this browser tab; signing out clears it locally.
 
 ## Postman
 
