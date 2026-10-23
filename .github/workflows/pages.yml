@@ -26,12 +26,20 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Verify website files
+        run: |
+          test -s broncocircle/index.html
+          test -s broncocircle/styles.css
+          test -s broncocircle/app.js
+          test -d broncocircle/assets
+          test -n "$(find broncocircle/assets -type f -print -quit)"
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: broncocircle
+          # Publish the folder contents so index.html is at the Pages root.
+          path: ./broncocircle
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
