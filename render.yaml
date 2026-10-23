@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: broncocircle
+    runtime: node
+    plan: free
+    branch: main
+    # Keep the repo root: Express also serves broncocircle/ and frontend/login/.
+    buildCommand: npm ci --prefix backend --omit=dev
+    startCommand: npm --prefix backend start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
