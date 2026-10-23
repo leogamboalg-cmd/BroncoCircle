@@ -53,6 +53,14 @@ async function loadFeed() {
     const text = document.createElement("p");
     text.textContent = post.text;
     card.append(author, time, text);
+    if (post.event) {
+      const link = document.createElement("a");
+      link.href = `/event.html?id=${encodeURIComponent(post._id)}`;
+      link.textContent = post.event.title;
+      const attendance = document.createElement("p");
+      attendance.textContent = `${post.attendeeCount || 0} going · ${post.spotsRemaining == null ? "Open attendance" : `${post.spotsRemaining} spots left`}${post.isGoing ? " · You're going" : ""}`;
+      card.append(link, attendance);
+    }
     if (post.imageUrl) {
       const image = document.createElement("img");
       image.src = post.imageUrl;
@@ -74,6 +82,8 @@ async function openSession() {
     $("feed").hidden = false;
     await loadFeed();
     status(`Logged in as ${account.name}.`);
+    const eventId = new URLSearchParams(location.search).get("event");
+    if (/^[a-f0-9]{24}$/i.test(eventId || "")) location.assign(`/event.html?id=${eventId}`);
   } catch (error) {
     if (error.status !== 404) throw error;
     $("setup").hidden = false;
