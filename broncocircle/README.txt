@@ -1,13 +1,17 @@
 BRONCOCIRCLE — CAMPUS EVENT PROFILE
 
-Open index.html in a modern browser. No installation, framework, API key,
-or build step is required. Keep the assets folder beside the three source files.
+Open index.html for the profile or discover.html for the campus feed in a
+modern browser. No installation, framework, API key, or build step is required.
+Keep the assets folder beside the source files.
 For the best browser features, serve this folder with any local web server.
 
 FILES
 index.html  Page structure and accessible dialogs
 styles.css  Responsive layout, green/gold palette, and local fonts
 app.js      Sample events, filters, RSVP, saving, forms, and calendar export
+discover.html  Home/discover feed, using the same header and shared profile styles
+discover.css   Feed layout and responsive cards
+discover.js    Expandable invites, friends/saved feeds, and browser-saved comments
 assets/     Included photography, fonts, and favicon
 
 WHAT WORKS
@@ -19,6 +23,9 @@ WHAT WORKS
 - Create an event and edit the profile
 - Share sample-event links and download calendar invitations
 - Browser storage remembers profile edits, RSVPs, saved events, and new plans
+- The Home icon opens Discover; the green profile icon returns to the profile
+- Discover includes hobby/search filters, expandable invites, RSVP, and comments
+- Saved events and RSVPs carry between Discover and the profile
 
 CUSTOMIZE
 Edit sampleEvents near the top of app.js to change the demo events.
