@@ -5,7 +5,7 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const escapeHTML = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const STORAGE_KEY = 'broncocircle-profile-v1';
+const STORAGE_KEY = 'broncocircle-profile-v2';
 const SESSION_KEY = 'broncocircle-session-events';
 const isDiscoverPage = document.body.dataset.page === 'discover';
 const categories = ['Games', 'Outdoors', 'Coffee', 'Creative', 'Sports'];
@@ -28,7 +28,7 @@ const discoveryEvents = [
 ];
 
 function loadState() {
-  const defaults = {joined:['coffee-and-catchup'],saved:['golden-hour-hike'],custom:[],profile:{name:'Johnny Park',handle:'johnnyonthequad',bio:'Collecting good memories, not just units. 🌱\nAlways down for a game, a trail, or one more coffee.'}};
+  const defaults = {joined:['coffee-and-catchup'],saved:['golden-hour-hike'],custom:[],profile:{name:'Los Chulos',handle:'loschulos',bio:'Hi chat'}};
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (stored && typeof stored === 'object') {
