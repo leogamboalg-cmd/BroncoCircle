@@ -8,13 +8,14 @@ import { chromium } from 'playwright-core';
 
 const app = express();
 app.use(express.json());
+app.use('/login', express.static(fileURLToPath(new URL('../../frontend/login/', import.meta.url))));
 app.use(express.static(fileURLToPath(new URL('../../broncocircle/', import.meta.url))));
 const accounts = new Map(), profiles = new Map(), posts = [];
 let next = 1, failCreate = false, failSave = false;
 const id = () => (next++).toString(16).padStart(24, '0');
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.post('/api/auth/signup', (req, res) => {
-  const account = { _id: id(), name: req.body.name, email: req.body.email, password: req.body.password, token: id().repeat(3) };
+  const account = { _id: id(), name: req.body.name, email: req.body.email, password: req.body.password, token: id().padEnd(64, 'a') };
   accounts.set(account.email, account); res.status(201).json({ account, token: account.token });
 });
 app.post('/api/auth/login', (req, res) => {
@@ -107,10 +108,11 @@ try {
   const host = await hostContext.newPage(), guest = await guestContext.newPage();
   async function signUp(page, name) {
     await page.goto(`${base}/discover.html`);
-    await page.locator('#account-name').fill(name);
-    await page.locator('#account-email').fill(`${name.toLowerCase()}@example.test`);
-    await page.locator('#account-password').fill('Password123');
-    await page.getByRole('button', { name: 'Create account', exact: true }).click();
+    await page.locator('#choose-signup').click();
+    await page.locator('#email').fill(`${name.toLowerCase()}@example.test`);
+    await page.locator('#password').fill('Password123');
+    await page.locator('#submit-button').click();
+    await page.locator('#edit-name').fill(name);
     await page.locator('#edit-handle').fill(name.toLowerCase());
     await page.locator('#edit-major').fill('CS');
     await page.locator('input[name="interests"][value="Games"]').check();
@@ -197,9 +199,10 @@ try {
     await guest.locator('#session-logout').click();
     assert.equal(await guest.locator('.event-card').count(), 0);
     await guest.locator('#session-login').click();
-    await guest.locator('#account-email').fill('guest@example.test');
-    await guest.locator('#account-password').fill('Password123');
-    await guest.locator('#account-form button[value="login"]').click();
+    await guest.locator('#choose-login').click();
+    await guest.locator('#email').fill('guest@example.test');
+    await guest.locator('#password').fill('Password123');
+    await guest.locator('#submit-button').click();
     await guest.waitForFunction(()=>document.querySelector('#session-status').textContent === 'Signed in as Guest');
   });
   await check('Pacific conversion rejects DST gaps', async()=>{

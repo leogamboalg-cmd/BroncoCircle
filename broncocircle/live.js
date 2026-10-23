@@ -8,7 +8,7 @@
   let records = [];
   let dataVersion = 0;
   const samplePlans = [...sampleEvents, ...discoveryEvents].map(event => ({
-    ...event, sample: true, host: event.host || { name: 'Johnny Park', initials: 'JP', image: 'avatar' }
+    ...event, sample: true, host: event.host || { name: 'Los Chulos', initials: 'JP', image: 'avatar' }
   }));
   const pending = new Set();
   const eventImages = new WeakMap();
@@ -109,22 +109,8 @@
     return true;
   }
   function showAuth() {
-    showForm('<div class="eyebrow">YOUR CAMPUS. YOUR PEOPLE.</div><h2 id="form-title">Make yourself at home.</h2><form id="account-form"><div class="form-field"><label for="account-name">Name (for a new account)</label><input id="account-name" name="name" autocomplete="name" maxlength="100"></div><div class="form-field"><label for="account-email">Email</label><input id="account-email" name="email" type="email" autocomplete="username" required maxlength="254"></div><div class="form-field"><label for="account-password">Password</label><input id="account-password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required></div><p class="form-error" id="form-error" role="alert" hidden></p><div class="account-actions"><button class="button button-green" name="action" value="login">Sign in</button><button class="button button-outline" name="action" value="signup">Create account</button></div></form>');
-    $('#account-form').addEventListener('submit', async event => {
-      event.preventDefault(); const form = event.currentTarget;
-      if (form.dataset.busy) return;
-      const body = Object.fromEntries(new FormData(form));
-      const action = event.submitter?.value || 'login';
-      if (action === 'signup' && !body.name.trim()) { formError('Add your name to create an account.'); return; }
-      setBusy(form, true);
-      try {
-        const session = await api.request(`/auth/${action}`, { method: 'POST', body });
-        api.setToken(session.token); form.reset(); $('#form-dialog').close();
-        sessionUI();
-        await restore();
-      } catch (error) { if ($('#form-dialog').open) formError(error.message); failure(error); }
-      finally { setBusy(form, false); }
-    });
+    try { sessionStorage.setItem('broncocircle-return-to', location.pathname + location.search + location.hash); } catch { /* Login still returns to your profile. */ }
+    location.assign('/login/');
   }
   function formError(message) { $('#form-error').textContent = message; $('#form-error').hidden = false; }
   function setBusy(form, busy) {
@@ -264,7 +250,7 @@
     $('#profile-bio').textContent = shown.bio || '';
     $('.profile-hobbies').innerHTML = (shown.interests || []).map(hobby=>`<span class="live-hobby">${escapeHTML(hobby)}</span>`).join('');
     $('.profile-hobbies').setAttribute('aria-label', 'Hobbies');
-    $('.profile-portrait img').src = shown.avatarUrl || 'assets/avatar.jpg';
+    $('.profile-portrait img').src = shown.avatarUrl || imageSrc('avatar');
     $('.profile-portrait img').alt = shown.name || 'Your profile';
     $('.online-dot').hidden = true;
     $('#edit-profile').hidden = !ownPage();
@@ -303,7 +289,17 @@
     $('#about-btn').textContent = 'About BroncoCircle';
     state.profile = { name: 'Your profile', handle: '', bio: 'Sign in to make plans with your campus.' };
     sessionUI(); render();
-    if (api.token) { try { await restore(); } catch (error) { failure(error); } }
+    if (api.token) {
+      let returnTo = '';
+      try { returnTo = sessionStorage.getItem('broncocircle-return-to') || ''; sessionStorage.removeItem('broncocircle-return-to'); } catch { /* Open your profile if storage is unavailable. */ }
+      if (returnTo) {
+        const target = new URL(returnTo, location.origin);
+        if (target.origin === location.origin && ['/index.html', '/discover.html'].includes(target.pathname) && target.href !== location.href) {
+          location.replace(target.href); return;
+        }
+      }
+      try { await restore(); } catch (error) { failure(error); }
+    }
     else showAuth();
   });
 })();

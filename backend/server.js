@@ -12,6 +12,7 @@ import { connectModels } from "./models/index.js";
 
 const app = express();
 app.use(express.json());
+app.use('/login', express.static(fileURLToPath(new URL('../frontend/login/', import.meta.url))));
 app.use(express.static(fileURLToPath(new URL("../broncocircle/", import.meta.url))));
 
 // Connect each URL to its route file.

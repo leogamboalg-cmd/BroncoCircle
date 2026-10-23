@@ -25,18 +25,28 @@ async function page(fetcher, token = 'host', mode = 'live') {
   const document = { body, activeElement: body, hidden: false, title: '', querySelector: get,
     querySelectorAll: ()=>[], createElement: element, addEventListener() {}, getElementById: id=>get(`#${id}`) };
   const storage = new Map([['broncocircle-token', token]]);
-  const sandbox = { document, location: { hostname: 'localhost', protocol: 'http:', search: '', hash: '', pathname: '/discover.html' },
+  const sandbox = { document, location: { hostname: 'localhost', origin: 'http://localhost', href: 'http://localhost/discover.html', protocol: 'http:', search: '', hash: '', pathname: '/discover.html', assign: value=>{ sandbox.lastNavigation = value; }, replace: value=>{ sandbox.lastNavigation = value; } },
     history: { replaceState() {} }, AbortSignal, URLSearchParams, URL, FormData, console,
     localStorage: { getItem: ()=>null, setItem() {} }, sessionStorage: { getItem: key=>storage.get(key), setItem: (key,value)=>storage.set(key,value), removeItem: key=>storage.delete(key) },
     fetch: fetcher, addEventListener() {}, setTimeout: ()=>0, clearTimeout() {}, CSS: { escape: value=>value } };
   sandbox.window = sandbox;
   const context = vm.createContext(sandbox);
   for (const script of scripts) vm.runInContext(script, context);
-  const expectedStatus = mode === 'demo' ? /^Demo preview/ : /^Signed in as/;
+  const expectedStatus = mode === 'demo' ? /^Demo preview/ : token ? /^Signed in as/ : /^Sign in/;
   for (let i = 0; i < 100 && !expectedStatus.test(get('#session-status').textContent); i++) await new Promise(resolve=>setImmediate(resolve));
   assert.match(get('#session-status').textContent, expectedStatus);
-  return { context, get, live: sandbox.LiveApp, api: sandbox.BroncoAPI };
+  return { context, get, storage, live: sandbox.LiveApp, api: sandbox.BroncoAPI };
 }
+
+test('live site uses the teammate login page and preserves the destination instead of showing another login form', async()=>{
+  const entry = await page(async()=>new Response(JSON.stringify({ status:'ok' })), '', 'live');
+  assert.equal(entry.context.lastNavigation, '/login/');
+  assert.equal(entry.storage.get('broncocircle-return-to'), '/discover.html');
+  assert.doesNotMatch(entry.get('#form-content').innerHTML, /account-form/);
+  assert.equal(vm.runInContext("imageSrc('billiards')", entry.context), 'assets/billiards.png');
+  assert.equal(vm.runInContext("imageSrc('avatar')", entry.context), 'assets/teamphoto.jpeg');
+  assert.equal(vm.runInContext("imageSrc('bowling')", entry.context), 'assets/billiards.png');
+});
 
 test('static preview shows the photo field near the top and explains that uploads need the running app', async()=>{
   const preview = await page(async()=>new Response('Not found', { status:404 }), '', 'demo');
@@ -91,7 +101,7 @@ test('actual website scripts create shared events, save, RSVP, comment, and clea
   const a = await page(fetcher);
   assert.equal(a.live.events.length, 6, 'hardcoded plans remain alongside database events');
   assert.equal(a.live.events.every(event=>event.sample), true);
-  await a.live.toggleRSVP('bowling-night');
+  await a.live.toggleRSVP(a.live.events[0].id);
   assert.equal(posts.length, 0, 'sample interactions must not create database records');
   const draft = { title:'Games <em>together</em>', description:'Bring games', location:'BSC', date:'2030-11-10', start:'16:00', end:'18:00', capacity:'2', category:'Games', note:'All welcome' };
   const form = element(); a.get('#form-dialog').open = true;

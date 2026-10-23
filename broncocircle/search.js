@@ -23,8 +23,8 @@ const searchPageLinks = {
   event: event => event.eventUrl || `index.html#event=${encodeURIComponent(event.id)}`
 };
 const searchPageData = (() => {
-  const storageKey = 'broncocircle-profile-v1';
-  const defaultProfile = {name:'Johnny Park',handle:'johnnyonthequad',bio:'Collecting good memories, not just units. 🌱\nAlways down for a game, a trail, or one more coffee.'};
+  const storageKey = 'broncocircle-profile-v2';
+  const defaultProfile = {name:'Los Chulos',handle:'loschulos',bio:'Hi chat'};
   const myHobbies = ['Games','Outdoors','Coffee'];
   const hobbyLabels = {Games:'Game nights',Outdoors:'The outdoors',Coffee:'Coffee runs',Creative:'Creative',Sports:'Sports'};
   const hobbyEmoji = {Games:'🎱',Outdoors:'☀️',Coffee:'☕',Creative:'🎨',Sports:'🏀'};

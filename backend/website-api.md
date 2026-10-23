@@ -6,6 +6,12 @@ comments, and student/event search when served by Express. Refresh retrieves
 updates from other users, as does returning to the tab. There is no background
 polling or realtime connection. Tokens stay in sessionStorage for the tab.
 
+Sign-in and signup use the teammate's existing `frontend/login/` page at
+`/login/`. Its HTML, CSS, JavaScript, and assets are unchanged. The main app
+reuses its `broncocircle-token` session and collects profile details after
+signup. A same-origin return location takes users back to their selected plan
+or Discover after authentication. There is no second login popup.
+
 Direct-file previews, GitHub Pages, and servers without the API show a labeled
 local demo. Demo plans and browser state are never copied into real accounts.
 GitHub Pages alone cannot run Express or MongoDB; shared events require the
@@ -81,8 +87,10 @@ other attendees or authors. Counts always come from stored RSVPs, not from the
 demo's `count` field. End time must be after start time. Capacity is a positive
 integer, or null for unlimited attendance.
 
-Allowed local image names: bowling, hike, coffee, pool, art, basketball, guitar,
-photography, picnic. Render as `assets/<name>.jpg`. Uploaded cover photos use the
+Allowed local image names: bowling, billiards, indoorsoccer, hike, coffee, pool,
+art, basketball, guitar, photography, picnic. Use the app's `imageSrc` helper to
+resolve teammate assets and extensions; legacy bowling/coffee names map to
+billiards.png. Uploaded cover photos use the
 existing top-level `imageUrl` from `POST /api/uploads/image` instead.
 
 The live create-event form includes an optional file picker with preview and

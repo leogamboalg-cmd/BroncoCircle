@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174c38">
+  <meta name="description" content="Log in or sign up for BroncoCircle. Your campus, your people.">
+  <title>Welcome · BroncoCircle</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="login.css">
+  <script src="login.js" defer></script>
+</head>
+<body>
+  <div class="page-background" aria-hidden="true"></div>
+  <main class="auth-shell">
+    <section class="auth-card" aria-labelledby="page-title">
+      <header class="card-header">
+        <div class="brand" aria-label="BroncoCircle">
+          <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path fill="#f3cc54" d="m5 29 10-17 6 8 5-12 10 21Z"/><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" d="m3 31 12-18 7 9 5-13 11 22M11 20l4 4 4-5m6-5 3 5 2-3"/></svg>
+          <span>BroncoCircle</span>
+        </div>
+        <button class="back-button" id="back-button" type="button" aria-label="Back to welcome" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m5-5-5 5 5 5"/></svg>
+        </button>
+      </header>
+
+      <div class="welcome-view" id="welcome-view">
+        <span class="welcome-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="m7 30 9-16 7 8 5-13 9 21"/><path d="m12 23 4 4 4-5m6-7 3 5 2-3"/><circle cx="11" cy="10" r="3"/></svg></span>
+        <h1 id="page-title" tabindex="-1">Your campus.<br>Your circle.</h1>
+        <p class="intro">Good company starts here.</p>
+        <div class="welcome-actions">
+          <button class="button primary" id="choose-login" type="button">Log in <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+          <button class="button secondary" id="choose-signup" type="button">Sign up</button>
+        </div>
+      </div>
+
+      <div class="credentials-view" id="credentials-view" hidden>
+        <h1 id="form-title" tabindex="-1">Log in</h1>
+        <p class="intro" id="form-intro">Welcome back to your circle.</p>
+        <form id="auth-form" method="post" novalidate>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="username" inputmode="email" placeholder="you@cpp.edu" maxlength="254" spellcheck="false" autocapitalize="none" required>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="password-field">
+              <input id="password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="Your password" required>
+              <button class="show-password" id="show-password" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+            </div>
+            <p class="field-hint" id="password-hint" hidden>Use 8–128 characters.</p>
+          </div>
+          <p class="form-message error" id="form-error" role="alert" hidden></p>
+          <p class="form-message success" id="form-status" role="status" aria-live="polite" hidden></p>
+          <button class="button primary submit-button" id="submit-button" type="submit"><span id="submit-label">Log in</span><span class="spinner" aria-hidden="true" hidden></span></button>
+        </form>
+        <p class="switch-line"><span id="switch-copy">New here?</span> <button id="switch-mode" type="button">Sign up</button></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
