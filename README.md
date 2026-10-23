@@ -2,7 +2,7 @@
 
 CPP community app. See [project.md](project.md) for the idea.
 
-- `frontend/` ? reserved for the frontend.
+- `broncocircle/` - website served by Express and published to GitHub Pages.
 - `backend/server.js` ? starts Express.
 - `backend/routes/` ? two files defining profile and post URLs.
 - `backend/controllers/` ? two files returning sample data.

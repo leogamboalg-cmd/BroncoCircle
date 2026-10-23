@@ -1,5 +1,23 @@
 BRONCOCIRCLE — CAMPUS EVENT PROFILE
 
+LIVE APP
+From the repository's backend/ folder, run npm install and npm start, then open
+http://localhost:3000/discover.html. Configure backend/.env with MongoDB first.
+Sign up or sign in, create your profile, and make an event. Events, RSVPs,
+saved plans, comments, and profile edits use your account on the backend.
+The event form accepts an optional JPEG, PNG, or WebP photo up to 5 MB with
+preview/removal. Configure Cloudinary in backend/.env to enable uploads.
+Photos are stored in Cloudinary; the event stores the returned image URL.
+Use Refresh or return to the browser tab to get other users' latest updates.
+Times are Pacific regardless of the device's timezone. The Find students &
+events link uses real API records and opens student profiles and shared plans.
+See backend/website-api.md for the API contract and test instructions.
+
+STATIC PREVIEW
+Opening the files directly or on GitHub Pages shows a labeled local demo.
+GitHub Pages does not run the backend. Demo data stays separate from accounts.
+The sections below describe that static preview.
+
 Open index.html for the profile or discover.html for the campus feed in a
 modern browser. No installation, framework, API key, or build step is required.
 Keep the assets folder beside the source files.
@@ -9,6 +27,8 @@ FILES
 index.html  Page structure and accessible dialogs
 styles.css  Responsive layout, green/gold palette, and local fonts
 app.js      Sample events, filters, RSVP, saving, forms, and calendar export
+api.js      Shared API client, session token, and Pacific time conversion
+live.js     Live login, profiles, events, RSVP, saves, comments, and refresh
 discover.html  Home/discover feed, using the same header and shared profile styles
 discover.css   Feed layout and responsive cards
 discover.js    Expandable invites, friends/saved feeds, and browser-saved comments

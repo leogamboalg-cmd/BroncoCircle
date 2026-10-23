@@ -1,4 +1,4 @@
-/* BroncoCircle — dependency-free campus profile demo. */
+/* BroncoCircle profile and event UI, shared by live and static previews. */
 'use strict';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -45,10 +45,13 @@ let currentFilter = 'All';
 let currentEventId = null;
 let toastTimeout;
 let persistenceWarningShown = false;
-const events = () => [...sampleEvents, ...discoveryEvents, ...state.custom];
+const events = () => BroncoAPI.mode === 'demo' ? [...sampleEvents, ...discoveryEvents, ...state.custom] : (window.LiveApp?.events || []);
+const isHostedEvent = event => BroncoAPI.mode === 'demo' ? !event.host : Boolean(window.LiveApp?.isHosted(event));
 const getEvent = id => events().find(event => event.id === id);
 const isJoined = event => state.joined.includes(event.id);
-const attendance = event => event.count + (isJoined(event) ? 1 : 0);
+const attendance = event => event.count + (BroncoAPI.mode === 'demo' && isJoined(event) ? 1 : 0);
+const eventImage = event => event.imageUrl || `assets/${event.image}.jpg`;
+const capacityLabel = event => event.capacity === Infinity ? '∞' : event.capacity;
 const spots = event => Math.max(0,event.capacity - attendance(event));
 const dateObject = event => new Date(`${event.date}T12:00:00`);
 const longDate = event => dateObject(event).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
@@ -70,6 +73,7 @@ function notify(message) {
   toastTimeout = setTimeout(() => toast.classList.remove('visible'),3300);
 }
 function applyProfile() {
+  if (BroncoAPI.mode !== 'demo') return window.LiveApp?.applyProfile();
   const name = state.profile.name;
   if (isDiscoverPage) { document.title = 'Discover · BroncoCircle'; return; }
   $('#profile-name').innerHTML = `${escapeHTML(name)} <span class="verified" aria-label="Campus verified">${icon('check')}</span>`;
@@ -78,7 +82,8 @@ function applyProfile() {
   document.title = `${name} · BroncoCircle`;
   $$('.profile-portrait>img').forEach(img => img.alt = name);
 }
-function avatarStack() {
+function avatarStack(event) {
+  if (BroncoAPI.mode !== 'demo') return (event?.attendees || []).slice(0,3).map(person => `<span class="mini-avatar" aria-hidden="true">${escapeHTML((person.name || 'Student').split(/\s+/).map(word=>word[0]).slice(0,2).join(''))}</span>`).join('');
   return '<span class="avatar-stack" aria-hidden="true"><img class="mini-avatar" src="assets/friend.jpg" alt=""><span class="mini-avatar avatar-b">AL</span><span class="mini-avatar avatar-c">MK</span></span>';
 }
 function cardHTML(event,index) {
@@ -87,29 +92,29 @@ function cardHTML(event,index) {
   const remaining = spots(event);
   return `<article class="event-card" data-event="${escapeHTML(event.id)}" style="animation-delay:${Math.min(index,5)*35}ms">
     <button class="card-image-button" data-open="${escapeHTML(event.id)}" aria-label="View ${escapeHTML(event.title)} details">
-      <img src="assets/${escapeHTML(event.image)}.jpg" alt="${escapeHTML(event.imageAlt || event.title)}" ${index>2?'loading="lazy"':''}>
+      <img src="${escapeHTML(eventImage(event))}" alt="${escapeHTML(event.imageAlt || event.title)}" ${index>2?'loading="lazy"':''}>
       <span class="image-shade"></span><span class="date-badge"><small>${month(event)}</small><strong>${day(event)}</strong></span>
       <span class="spots-badge"><span class="dot"></span>${remaining>0?`${remaining} spots left`:'Circle is full'}</span>
       <span class="photo-label">${icon('pin')}${escapeHTML(event.location)}</span><span class="card-open-hint">${icon('arrow')}</span>
     </button>
-    <div class="card-body"><div class="card-category"><span class="category-dot"></span>${escapeHTML(categoryLabels[event.category])}</div>
+    <div class="card-body"><div class="card-category"><span class="category-dot"></span>${escapeHTML(categoryLabels[event.category] || event.category)}</div>
       <div class="card-title-row"><button class="card-title" data-open="${escapeHTML(event.id)}">${escapeHTML(event.title)}</button><button class="save-button ${saved?'saved':''}" data-save="${escapeHTML(event.id)}" aria-pressed="${saved}" aria-label="${saved?'Unsave':'Save'} ${escapeHTML(event.title)}">${icon('bookmark')}</button></div>
       <div class="card-time">${icon('calendar')}<span>${dateObject(event).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span><span class="separator">·</span><span class="time-text">${timeRange(event)}</span></div>
-      <div class="card-footer"><div class="attendees">${avatarStack()}<span class="attendee-count"><strong>${attendance(event)}</strong>/${event.capacity} going</span></div><button class="rsvp-small ${joined?'joined':remaining===0?'full':''}" data-rsvp="${escapeHTML(event.id)}" aria-label="${joined?'Cancel RSVP for':'RSVP to'} ${escapeHTML(event.title)}" aria-pressed="${joined}" ${!joined && !remaining?'disabled':''}>${icon(joined?'check':'plus')}${joined?'Going':remaining?'RSVP':'Full'}</button></div>
+      <div class="card-footer"><div class="attendees">${avatarStack(event)}<span class="attendee-count"><strong>${attendance(event)}</strong>/${capacityLabel(event)} going</span></div><button class="rsvp-small ${joined?'joined':remaining===0?'full':''}" data-rsvp="${escapeHTML(event.id)}" aria-label="${joined?'Cancel RSVP for':'RSVP to'} ${escapeHTML(event.title)}" aria-pressed="${joined}" ${!joined && !remaining?'disabled':''}>${icon(joined?'check':'plus')}${joined?'Going':remaining?'RSVP':'Full'}</button></div>
     </div></article>`;
 }
 function renderEvents() {
   if (isDiscoverPage) { renderDiscover(); return; }
   const search = $('#search').value.trim().toLowerCase();
-  let visible = events().filter(event => (currentTab==='hosting'?!event.host:(currentTab==='going'?state.joined:state.saved).includes(event.id)) && (currentFilter==='All'||event.category===currentFilter) && (!search || `${event.title} ${event.category} ${event.location} ${event.description}`.toLowerCase().includes(search)));
+  let visible = events().filter(event => (currentTab==='hosting'?isHostedEvent(event):(currentTab==='going'?state.joined:state.saved).includes(event.id)) && (currentFilter==='All'||event.category===currentFilter) && (!search || `${event.title} ${event.category} ${event.location} ${event.description}`.toLowerCase().includes(search)));
   const sort = $('#sort').value;
   visible.sort((a,b) => sort==='spots'?spots(b)-spots(a):(sort==='latest'?-1:1)*(`${a.date}T${a.start}`.localeCompare(`${b.date}T${b.start}`)));
   $('#event-grid').innerHTML = visible.map(cardHTML).join('');
   $('#empty-state').hidden = visible.length>0;
   $('#event-grid').hidden = visible.length===0;
   const hostedCount = $('#hosted-count');
-  if (hostedCount) hostedCount.textContent = events().filter(event => !event.host).length;
-  $('#hosting-count').textContent = events().filter(event => !event.host).length;
+  if (hostedCount) hostedCount.textContent = events().filter(isHostedEvent).length;
+  $('#hosting-count').textContent = events().filter(isHostedEvent).length;
   $('#going-count').textContent = events().filter(isJoined).length;
   $('#saved-count').textContent = events().filter(event => state.saved.includes(event.id)).length;
   const headings = {hosting:'Good plans, better company',going:'Your next campus memories',saved:'Keep a little something planned'};
@@ -139,6 +144,7 @@ function setFilter(filter) {
   renderEvents();
 }
 function toggleSave(id) {
+  if (BroncoAPI.mode !== 'demo') return window.LiveApp?.toggleSave(id);
   const event = getEvent(id);
   if (!event) return;
   const saved = state.saved.includes(id);
@@ -149,6 +155,7 @@ function toggleSave(id) {
   notify(saved?'Event removed from saved.':'Saved for a future good time.');
 }
 function toggleRSVP(id) {
+  if (BroncoAPI.mode !== 'demo') return window.LiveApp?.toggleRSVP(id);
   const event = getEvent(id);
   if (!event) return;
   const joined = isJoined(event);
@@ -165,12 +172,12 @@ function renderDetail(event) {
   const focusAction = document.activeElement?.dataset.detailAction;
   $('#event-detail').innerHTML = `<div class="event-detail-layout">
     <button class="dialog-close icon-button" data-close="event-dialog" aria-label="Close event details">${icon('close')}</button>
-    <div class="detail-photo"><img src="assets/${escapeHTML(event.image)}.jpg" alt="${escapeHTML(event.imageAlt || event.title)}"><div class="detail-photo-note"><div class="eyebrow">A LITTLE MORE OFFLINE</div><p>${escapeHTML(categoryNotes[event.category]).replace(/\n/g,'<br>')}</p></div></div>
+    <div class="detail-photo"><img src="${escapeHTML(eventImage(event))}" alt="${escapeHTML(event.imageAlt || event.title)}"><div class="detail-photo-note"><div class="eyebrow">A LITTLE MORE OFFLINE</div><p>${escapeHTML(categoryNotes[event.category] || 'Good plans.\nBetter company.').replace(/\n/g,'<br>')}</p></div></div>
     <div class="detail-content"><div class="detail-host"><img src="assets/${event.host?.image || 'avatar'}.jpg" alt=""><div><strong>${escapeHTML(event.host?.name || state.profile.name)}</strong>is bringing people together</div></div>
-      <span class="detail-category">${escapeHTML(categoryLabels[event.category])}</span><h2 id="event-title">${escapeHTML(event.title)}</h2>
-      <div class="detail-meta"><div>${icon('calendar')}<div><strong>${longDate(event)}</strong><small>${timeRange(event)} · Pacific time</small></div></div><div>${icon('pin')}<div><strong>${escapeHTML(event.location)}</strong><small>Cal Poly Pomona campus</small></div></div><div>${icon('users')}<div><strong>${attendance(event)} of ${event.capacity} spots filled</strong><small>${remaining?`${remaining} ${remaining===1?'spot':'spots'} left · `:''}${escapeHTML(event.cost || 'Free to join')}</small></div></div></div>
+      <span class="detail-category">${escapeHTML(categoryLabels[event.category] || event.category)}${event.sample ? ' · Sample plan' : ''}</span><h2 id="event-title">${escapeHTML(event.title)}</h2>
+      <div class="detail-meta"><div>${icon('calendar')}<div><strong>${longDate(event)}</strong><small>${timeRange(event)} · Pacific time</small></div></div><div>${icon('pin')}<div><strong>${escapeHTML(event.location)}</strong><small>Cal Poly Pomona campus</small></div></div><div>${icon('users')}<div><strong>${attendance(event)} of ${capacityLabel(event)} spots filled</strong><small>${remaining?`${remaining} ${remaining===1?'spot':'spots'} left · `:''}${escapeHTML(event.cost || 'Free to join')}</small></div></div></div>
       <p class="detail-description">${escapeHTML(event.description)}</p><div class="host-note"><span>💬</span><div>${escapeHTML(event.note)}</div></div>
-      <div class="detail-attendance">${avatarStack()}<span><strong>${attendance(event)} Broncos</strong> are making time for this.</span></div>
+      <div class="detail-attendance">${avatarStack(event)}<span><strong>${attendance(event)} Broncos</strong> are making time for this.</span></div>
       <div class="detail-actions"><button class="button button-green main-rsvp ${joined?'joined':''}" data-detail-action="rsvp" data-rsvp="${escapeHTML(event.id)}" aria-pressed="${joined}" ${!joined&&!remaining?'disabled':''}>${icon(joined?'check':'plus')}${joined?'You’re going · Cancel RSVP':remaining?'Count me in · RSVP':'This circle is full'}</button><button class="icon-button ${saved?'saved':''}" data-detail-action="save" data-save="${escapeHTML(event.id)}" aria-pressed="${saved}" aria-label="${saved?'Unsave':'Save'} event">${icon('bookmark')}</button><button class="icon-button" data-detail-action="share" data-share="${escapeHTML(event.id)}" aria-label="Share event">${icon('share')}</button></div>
       <p class="detail-footnote">${joined?'Your RSVP is saved on this browser. See you there!':'Plans change. You can cancel your RSVP anytime.'}</p><button class="calendar-button" data-calendar="${escapeHTML(event.id)}">${icon('calendar')}Add to calendar</button>
     </div></div>`;
@@ -185,6 +192,7 @@ function openEvent(id,{updateHash=true}={}) {
   $('#event-dialog').showModal();
   document.body.classList.add('modal-open');
   if(updateHash) replaceHash(`event=${encodeURIComponent(id)}`);
+  if (BroncoAPI.mode === 'live') window.LiveApp?.refreshDetail(id);
 }
 function replaceHash(hash='') {
   try { history.replaceState(null,'',`${location.pathname}${location.search}${hash?'#'+hash:''}`); } catch { /* File previews may block history updates. */ }
@@ -197,19 +205,26 @@ function showForm(content) {
   document.body.classList.add('modal-open');
 }
 function showCreateForm() {
+  if (BroncoAPI.mode !== 'demo' && !window.LiveApp?.ensureProfile()) return;
   const today = new Date();
-  const minDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const minDate = BroncoAPI.mode === 'live' ? BroncoAPI.localParts(today).date : `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   showForm(`<div class="eyebrow">YOUR HOBBY. YOUR PEOPLE.</div><h2 id="form-title">Make a little plan<span class="gold-period">.</span></h2><p class="form-intro">It doesn’t have to be a big thing to be a good thing.</p>
     <form id="create-form"><div class="form-field"><label for="event-name">What’s the plan?</label><input id="event-name" name="title" required maxlength="65" placeholder="e.g. Friday night board games"></div>
+    <div class="form-field"><label for="event-image">Event photo (optional)</label><input id="event-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="event-image-help" ${BroncoAPI.mode === 'live' ? '' : 'disabled'}><small id="event-image-help">${BroncoAPI.mode === 'live' ? 'Choose a JPEG, PNG, or WebP up to 5 MB. Otherwise, we’ll use a hobby photo.' : 'Photo uploads are unavailable in this demo. Open the running app at localhost:3000 to upload a photo.'}</small><img id="event-image-preview" class="event-image-preview" alt="Selected event photo preview" hidden><button type="button" id="event-image-remove" class="button button-outline" hidden>Remove photo</button><p id="event-image-status" role="status" aria-live="polite"></p></div>
     <div class="form-row"><div class="form-field"><label for="event-hobby">Hobby</label><select id="event-hobby" name="category">${categories.map(cat=>`<option>${cat}</option>`).join('')}</select></div><div class="form-field"><label for="event-capacity">Total spots, including you</label><input id="event-capacity" type="number" name="capacity" min="2" max="100" value="8" required></div></div>
     <div class="form-field"><label for="event-location">Where on campus?</label><input id="event-location" name="location" required maxlength="60" placeholder="e.g. BSC Games Room"></div>
     <div class="form-field"><label for="event-date">Date</label><input id="event-date" type="date" name="date" min="${minDate}" value="${minDate}" required></div><div class="form-row"><div class="form-field"><label for="event-start">Starts</label><input id="event-start" type="time" name="start" value="16:00" required></div><div class="form-field"><label for="event-end">Ends</label><input id="event-end" type="time" name="end" value="18:00" required></div></div>
     <div class="form-field"><label for="event-description">The details</label><textarea id="event-description" name="description" required maxlength="600" placeholder="What’s happening? What should people bring?"></textarea></div>
     <div class="form-field"><label for="event-note">A note from you (optional)</label><input id="event-note" name="note" maxlength="180" placeholder="All levels welcome. Come as you are!"></div>
     <p class="form-error" id="form-error" role="alert" hidden></p><button class="button button-green submit-button" type="submit">${icon('plus')}Create event</button><p class="form-help">A hobby photo is added for you. Demo events are saved on this browser.</p></form>`);
+  if (BroncoAPI.mode === 'live') {
+    $('.form-help', $('#create-form')).textContent = 'Times are Pacific. Your event will be shared with campus.';
+    window.LiveApp.setupEventImage($('#create-form'));
+  }
   $('#create-form').addEventListener('submit',event => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.target));
+    if (BroncoAPI.mode === 'live') { window.LiveApp.createEvent(data, event.target); return; }
     const fail = message => { $('#form-error').textContent=message;$('#form-error').hidden=false; };
     if (!data.title.trim() || !data.location.trim() || !data.description.trim()) { fail('Add a title, a campus location, and a few details.');return; }
     if (data.end <= data.start) { fail('Choose an end time after the start time.');$('#event-end').focus();return; }
@@ -224,6 +239,7 @@ function showCreateForm() {
   });
 }
 function showEditForm() {
+  if (BroncoAPI.mode !== 'demo') return window.LiveApp?.showProfileForm();
   showForm(`<div class="eyebrow">A LITTLE ABOUT YOU</div><h2 id="form-title">Make yourself at home<span class="gold-period">.</span></h2><p class="form-intro">Give your people a little glimpse of your world.</p><form id="profile-form"><div class="form-field"><label for="edit-name">Name</label><input id="edit-name" name="name" value="${escapeHTML(state.profile.name)}" required maxlength="40"></div><div class="form-field"><label for="edit-handle">Username</label><input id="edit-handle" name="handle" value="${escapeHTML(state.profile.handle)}" required maxlength="30" pattern="[A-Za-z0-9_.]+" title="Use letters, numbers, underscores, or periods."></div><div class="form-field"><label for="edit-bio">Your bio</label><textarea id="edit-bio" name="bio" maxlength="180" rows="3">${escapeHTML(state.profile.bio)}</textarea></div><p id="form-error" class="form-error" role="alert" hidden></p><button type="submit" class="button button-green submit-button">${icon('check')}Save profile</button><p class="form-help">Your edits are saved on this browser.</p></form>`);
   $('#profile-form').addEventListener('submit',event => {
     event.preventDefault();

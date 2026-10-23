@@ -221,6 +221,7 @@ function createCampusSearch({
 /* Initialize only this standalone search page; links use the handoff URLs above. */
 if (document.getElementById('campus-search')) {
   const data = searchPageData;
+  let shared = { hobbies: [], profiles: [], events: [] };
   const input = document.getElementById('search');
   const options = new URLSearchParams(location.search);
   const initialMode = options.get('mode') === 'events' ? 'events' : 'friends';
@@ -229,9 +230,9 @@ if (document.getElementById('campus-search')) {
   const campusSearch = createCampusSearch({
     root:document.getElementById('campus-search'),
     input,
-    getHobbies:()=>data.myHobbies,
-    getProfiles:()=>data.profiles,
-    getEvents:()=>data.allEvents(),
+    getHobbies:()=>BroncoAPI.mode === 'demo' ? data.myHobbies : shared.hobbies,
+    getProfiles:()=>BroncoAPI.mode === 'demo' ? data.profiles : shared.profiles,
+    getEvents:()=>BroncoAPI.mode === 'demo' ? data.allEvents() : shared.events,
     onProfileSelect:person=>location.assign(searchPageLinks.profile(person)),
     onEventSelect:event=>location.assign(searchPageLinks.event(event)),
     onChange:({mode,query})=>{
@@ -243,6 +244,29 @@ if (document.getElementById('campus-search')) {
     }
   });
   campusSearch.setTab(initialMode);
+  const connection = document.createElement('section');
+  connection.className = 'session-bar';
+  connection.innerHTML = '<p role="status">Connecting…</p><a class="button button-outline" href="index.html">Your profile / sign in</a>';
+  document.querySelector('main').prepend(connection);
+  BroncoAPI.ready.then(async () => {
+    const message = connection.querySelector('p');
+    if (BroncoAPI.mode === 'demo') { message.textContent = 'Demo preview — search results are sample data.'; campusSearch.render(); return; }
+    if (!BroncoAPI.token) { message.textContent = 'Sign in from your profile to search campus plans and students.'; return; }
+    try {
+      const [me, people, posts] = await Promise.all([BroncoAPI.request('/profiles/me'), BroncoAPI.request('/profiles'), BroncoAPI.request('/posts?view=discover')]);
+      shared.hobbies = me.interests || [];
+      shared.profiles = people.map(person=>({ ...person, id: person._id, handle: person.handle || person.name, hobbies: person.interests || [], initials: person.name.split(/\s+/).map(word=>word[0]).slice(0,2).join(''), isFriend: (me.friends || []).includes(person._id) }));
+      shared.events = posts.filter(post=>post.event).map(post=>{
+        const start = BroncoAPI.localParts(post.event.dateTime);
+        const end = BroncoAPI.localParts(post.event.endTime || post.event.dateTime);
+        return { id: post._id, title: post.event.title, hostId: post.author?._id, category: post.event.category || 'Games', date: start.date, start: start.time, endDate: end.date, end: end.time,
+          location: post.event.location, description: post.text, note: post.event.hostNote || '', hostName: post.author?.name || 'Student', image: post.event.image || 'coffee',
+          count: post.attendeeCount || 0, capacity: post.event.capacity ?? Infinity };
+      });
+      message.textContent = 'Search campus students and the latest 50 plans.';
+      campusSearch.render();
+    } catch (error) { message.textContent = error.message; }
+  });
   document.getElementById('nav-search').addEventListener('click',()=>input.focus());
   document.getElementById('nav-create').addEventListener('click',()=>location.assign(searchPageLinks.create));
   document.querySelectorAll('[data-nav]').forEach(button=>button.addEventListener('click',()=>{
