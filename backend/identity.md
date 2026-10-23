@@ -33,7 +33,7 @@ The backend assigns `account` from your token. Duplicate profile creation return
 | `POST /api/circles/:id/messages` | `{ "text": "Hello!" }`; members only, author is your profile. |
 | `PUT /api/meetups/:id/vote` | `{ "time": "2026-11-01T20:00:00Z" }`; must match a proposed time and belong to the circle. Atomically replaces your existing vote. |
 
-Posts, circles, messages, and votes require a linked profile as well as a token. AI retains its current behavior. Circle creation/joining and meetup creation are still future work; these endpoints use existing circle/meetup documents with real profile references.
+Posts, circles, messages, meetups, and votes require a linked profile as well as a token. AI retains its current behavior. Circle matching, creation, and opt-in joining are implemented; see [matching.md](./matching.md). Member-only meetup creation/listing and voting are documented in [meetups.md](./meetups.md).
 
 ## Existing data and indexes
 

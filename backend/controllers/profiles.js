@@ -1,7 +1,7 @@
 import Profile from "../models/Profile.js";
 
 function fields(body) {
-  return Object.fromEntries(["name", "major", "interests", "availability"]
+  return Object.fromEntries(["name", "major", "interests", "availability", "matchingEnabled", "avatarUrl"]
     .filter(key => Object.hasOwn(body || {}, key)).map(key => [key, body[key]]));
 }
 

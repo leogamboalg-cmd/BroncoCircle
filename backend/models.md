@@ -21,6 +21,10 @@ Source: [`models/Profile.js`](./models/Profile.js) · Collection: `profiles`
 
 Represents a person, their interests, and when they are available.
 
+`avatarUrl` is an optional HTTPS image URL in the configured Cloudinary cloud. Set it through profile setup/update; host, commenter, and attendee responses can display it.
+
+`matchingEnabled` is a Boolean defaulting to false. Users must opt in to appear in matching suggestions; see [matching.md](./matching.md).
+
 `account` is a required ObjectId reference to Account, assigned from the bearer token. A partial unique index enforces one profile per linked account while allowing legacy unlinked seed profiles. See [identity.md](./identity.md).
 
 | Field | Type | Rules / meaning |
@@ -40,7 +44,7 @@ Used by both `Profile.availability` and `Circle.sharedAvailability`. Each entry 
 | `start` | String | Required and trimmed; campus-local start time, such as `12:00`. |
 | `end` | String | Required and trimmed; campus-local end time, such as `13:00`. |
 
-The schema does not enforce day names, a time format, or that `end` comes after `start`.
+The schema enforces weekday names (normalized to title case), `HH:mm` times, and end after start on the same day. Profile availability permits up to 21 blocks.
 
 ## Post
 
@@ -69,6 +73,8 @@ Represents a community feed post written by a profile, optionally announcing an 
 
 ### Event (optional embedded schema)
 
+Events also have optional `endTime` (Date after dateTime), `capacity` (positive integer or null for unlimited), `category` (trimmed string, maximum 80 characters), and `hostNote` (trimmed string, maximum 500 characters). `attendees` defaults to an empty array of Profile references and is updated only through the RSVP/cancel routes. Details/feed responses populate attendee names/photos and include attendeeCount, spotsRemaining, and isGoing. See [events.md](./events.md).
+
 | Field | Type | Rules / meaning |
 | --- | --- | --- |
 | `title` | String | Required and trimmed when `event` is provided. |
@@ -82,6 +88,8 @@ Regular posts omit `event` (or set it to `null`). Event posts still require the 
 Source: [`models/Circle.js`](./models/Circle.js) · Collection: `circles`
 
 Represents a group of profiles with shared interests and availability.
+
+`candidateMembers` is a Profile ObjectId array holding the suggested group (defaults to `[]`). `members` holds accepted profiles only. Optional `matchKey` uniquely identifies the sorted candidate set through a partial unique index. Matching endpoints compute shared fields; see [matching.md](./matching.md).
 
 | Field | Type | Rules / meaning |
 | --- | --- | --- |
@@ -113,6 +121,8 @@ Source: [`models/Meetup.js`](./models/Meetup.js) · Collection: `meetups`
 
 Represents a proposed gathering for a circle, including candidate times and votes.
 
+Members can create/list meetups through `POST`/`GET /api/circles/:id/meetups`. Creation accepts a location of 1–200 characters and 1–3 distinct ISO timestamps with timezones; listing includes per-time `voteCounts`. These API checks supplement the schema below. See [meetups.md](./meetups.md).
+
 | Field | Type | Rules / meaning |
 | --- | --- | --- |
 | `circle` | ObjectId → Circle | Required; circle organizing the meetup. |
@@ -136,7 +146,7 @@ The schema does not enforce one vote per profile, circle membership, future date
 - Every top-level model gets an automatic MongoDB `_id` of type ObjectId. Mongoose also uses its default `__v` version key when documents are saved.
 - `ref` fields describe relationships for Mongoose population. They do not automatically load related documents or enforce that referenced documents exist.
 - Required strings cannot be empty after trimming. Required array entries do not make their containing array nonempty; only `Meetup.proposedTimes` explicitly requires at least one entry.
-- There are no custom model methods, statics, virtuals, or middleware. Account declares a unique email index.
+- There are no custom model methods, statics, virtuals, or middleware. Account has a unique email index; Profile and Circle have partial unique indexes for account ownership and matching candidate sets.
 - Automatic timestamps are not enabled. `Account`, `Post`, and `Message` declare `createdAt`; no model declares `updatedAt`.
 
 | Model | References |

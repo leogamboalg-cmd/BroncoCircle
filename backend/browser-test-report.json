@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-10-23T22:32:14.773Z",
+  "results": [
+    {
+      "name": "Logged-out event page offers login",
+      "passed": true
+    },
+    {
+      "name": "Login returns user to the event",
+      "passed": true
+    },
+    {
+      "name": "Details render safely and optional cover remains hidden",
+      "passed": true
+    },
+    {
+      "name": "Browser RSVP updates name, count, and cancel button",
+      "passed": true
+    },
+    {
+      "name": "Stale guest RSVP handles full-event conflict and disables button",
+      "passed": true
+    },
+    {
+      "name": "Cancel frees the spot and refresh lets another account join",
+      "passed": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "passed": true
+    },
+    {
+      "name": "Refresh retains attendance from MongoDB",
+      "passed": true
+    },
+    {
+      "name": "Feed links open the live event details",
+      "passed": true
+    },
+    {
+      "name": "Invalid, missing, and non-event links have clear errors",
+      "passed": true
+    },
+    {
+      "name": "No browser JavaScript exceptions",
+      "passed": true
+    }
+  ]
+}

@@ -12,6 +12,15 @@ const eventSchema = new Schema({
   title: { type: String, required: true, trim: true },
   location: { type: String, required: true, trim: true },
   dateTime: { type: Date, required: true },
+  endTime: { type: Date, validate: {
+    validator: function (value) { return value == null || value > this.dateTime; },
+    message: "Event endTime must be after dateTime.",
+  } },
+  capacity: { type: Number, default: null, min: 1,
+    validate: { validator: value => value == null || Number.isSafeInteger(value), message: "Capacity must be a positive integer." } },
+  attendees: [{ type: Schema.Types.ObjectId, ref: "Profile" }],
+  category: { type: String, trim: true, maxlength: 80 },
+  hostNote: { type: String, trim: true, maxlength: 500 },
 }, { _id: false });
 
 const postSchema = new Schema({
