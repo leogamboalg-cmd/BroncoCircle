@@ -32,7 +32,7 @@ function commentsFor(id) { return [...(sampleComments[id] || []), ...(savedComme
 function eventHost(event) { return event.host || {name:state.profile.name,initials:initialsFor(state.profile.name),image:'avatar'}; }
 function hostAvatar(host) {
   return host.image
-    ? `<img class="host-avatar" src="assets/${escapeHTML(host.image)}.jpg" alt="">`
+    ? `<img class="host-avatar" src="${escapeHTML(imageSrc(host.image))}" alt="">`
     : `<span class="host-avatar avatar-${escapeHTML(host.initials.toLowerCase())}" aria-hidden="true">${escapeHTML(host.initials)}</span>`;
 }
 function feedCardHTML(event) {

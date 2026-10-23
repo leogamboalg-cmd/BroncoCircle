@@ -31,7 +31,7 @@ CUSTOMIZE
 Edit sampleEvents near the top of app.js to change the demo events.
 Edit the default profile in loadState() to change the starting name and bio.
 Edit the color variables at the top of styles.css to adjust the palette.
-Replace assets/avatar.jpg with your own square portrait.
+Replace assets/teamphoto.jpeg with your own profile photo.
 To reset the demo, clear this site's localStorage in your browser.
 
 DEMO SCOPE

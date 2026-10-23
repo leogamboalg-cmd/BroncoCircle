@@ -11,6 +11,7 @@ const isDiscoverPage = document.body.dataset.page === 'discover';
 const categories = ['Games', 'Outdoors', 'Coffee', 'Creative', 'Sports'];
 const categoryImage = {Games:'billiards', Outdoors:'hike', Coffee:'billiards', Creative:'art', Sports:'indoorsoccer'};
 const imageSrc = name => {
+  if (name === 'avatar') return 'assets/teamphoto.jpeg';
   const file = name === 'coffee' ? 'billiards' : name;
   return `assets/${file}.${file === 'billiards' ? 'png' : 'jpg'}`;
 };
@@ -184,7 +185,7 @@ function renderDetail(event) {
   $('#event-detail').innerHTML = `<div class="event-detail-layout">
     <button class="dialog-close icon-button" data-close="event-dialog" aria-label="Close event details">${icon('close')}</button>
     <div class="detail-photo"><img src="${escapeHTML(imageSrc(event.image))}" alt="${escapeHTML(event.imageAlt || event.title)}"><div class="detail-photo-note"><div class="eyebrow">A LITTLE MORE OFFLINE</div><p>${escapeHTML(categoryNotes[event.category]).replace(/\n/g,'<br>')}</p></div></div>
-    <div class="detail-content"><div class="detail-host"><img src="${event.host?.image ? `assets/${escapeHTML(event.host.image)}.jpg` : 'assets/teamphoto.jpeg'}" alt=""><div><strong>${escapeHTML(event.host?.name || state.profile.name)}</strong>is bringing people together</div></div>
+    <div class="detail-content"><div class="detail-host"><img src="${escapeHTML(imageSrc(event.host?.image || 'avatar'))}" alt=""><div><strong>${escapeHTML(event.host?.name || state.profile.name)}</strong>is bringing people together</div></div>
       <span class="detail-category">${escapeHTML(categoryLabels[event.category])}</span><h2 id="event-title">${escapeHTML(event.title)}</h2>
       <div class="detail-meta"><div>${icon('calendar')}<div><strong>${longDate(event)}</strong><small>${timeRange(event)} · Pacific time</small></div></div><div>${icon('pin')}<div><strong>${escapeHTML(event.location)}</strong><small>Cal Poly Pomona campus</small></div></div><div>${icon('users')}<div><strong>${attendance(event)} of ${event.capacity} spots filled</strong><small>${remaining?`${remaining} ${remaining===1?'spot':'spots'} left · `:''}${escapeHTML(event.cost || 'Free to join')}</small></div></div></div>
       <p class="detail-description">${escapeHTML(event.description)}</p><div class="host-note"><span>💬</span><div>${escapeHTML(event.note)}</div></div>
