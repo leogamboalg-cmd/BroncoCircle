@@ -1,0 +1,19 @@
+/* Search styles only. Uses the colors and fonts in your existing styles.css. */
+.campus-search{max-width:760px;margin:40px auto;padding:0 20px}
+.campus-search-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;margin-bottom:20px;background:#fff;border:1px solid var(--line,#e6e9e0);border-radius:12px}
+.campus-search-tabs button{position:relative;padding:15px 10px;border:0;border-radius:8px;background:transparent;color:#7b8971;font:600 14px var(--heading,'Manrope',sans-serif);cursor:pointer}
+.campus-search-tabs button[aria-selected=true]{background:var(--green-light,#edf3eb);color:var(--green,#174c38)}
+.campus-search-tabs button[aria-selected=true]:after{content:'';position:absolute;bottom:6px;left:calc(50% - 10px);width:20px;height:2px;background:var(--gold,#e5bb42)}
+.campus-search-results{overflow:hidden;border:1px solid var(--line,#e6e9e0);border-radius:14px;background:#fff;touch-action:pan-y}
+.campus-search-row{display:flex;align-items:center;gap:16px;width:100%;padding:24px;border:0;border-bottom:1px solid var(--line,#e6e9e0);background:#fff;text-align:left;color:var(--green,#174c38);cursor:pointer;font:inherit}
+.campus-search-row:last-child{border-bottom:0}.campus-search-row:hover{background:#f6f8f0}
+.campus-search-row:focus-visible,.campus-search-tabs button:focus-visible{outline:2px solid var(--gold,#e5bb42);outline-offset:-4px}
+.campus-search-avatar{display:grid;place-items:center;flex-shrink:0;width:54px;height:54px;border-radius:50%;background:#e5eddc;color:#617b4e;font-weight:600}
+.campus-search-row[data-friend=true] .campus-search-avatar{background:#f3e9c9;color:#8d7739}
+.campus-search-copy{display:grid;gap:7px;min-width:0}.campus-search-name{font-weight:650;font-size:15px;overflow-wrap:anywhere}
+.campus-search-hobbies{display:flex;gap:5px;flex-wrap:wrap}.campus-search-hobby{padding:3px 8px;border:1px solid #e3e8d8;border-radius:20px;background:#f3f6eb;color:#7a8a6b;font-size:10px}
+.campus-search-meta{color:#819073;font-size:11px;line-height:1.7}.campus-search-empty{padding:40px 20px;text-align:center;color:#819073;font-size:13px}
+@media(max-width:600px){.campus-search{margin:25px auto;padding:0 16px}.campus-search-row{padding:20px 16px;gap:12px}.campus-search-avatar{width:46px;height:46px}.campus-search-name{font-size:13px}.campus-search-tabs button{font-size:12px}}
+
+/* This adjustment applies only to the standalone search page. */
+@media(max-width:360px){body[data-page=search] .header-inner{flex-wrap:wrap;gap:10px}body[data-page=search] .icon-nav{width:100%;justify-content:space-between}}
