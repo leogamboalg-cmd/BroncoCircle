@@ -3,7 +3,7 @@ The photographs illustrate fictional events and profiles.
 
 bowling.jpg     https://images.unsplash.com/photo-1631926041685-1782efc3a47a
 hike.jpg        https://images.unsplash.com/photo-1697222564092-f4dab603efa8
-coffee.jpg      https://images.unsplash.com/photo-1442512595331-e89e73853f31
+billiards.png   local photo (replaces the former coffee.jpg)
 basketball.jpg  https://images.unsplash.com/photo-1546519638-68e109498ffc
 art.jpg         https://images.unsplash.com/photo-1513364776144-60967b0f800f
 picnic.jpg      https://images.unsplash.com/photo-1529156069898-49953e39b3ac

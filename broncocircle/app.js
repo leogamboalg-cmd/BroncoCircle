@@ -6,28 +6,41 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const escapeHTML = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const STORAGE_KEY = 'broncocircle-profile-v1';
+const SESSION_KEY = 'broncocircle-session-events';
 const categories = ['Games', 'Outdoors', 'Coffee', 'Creative', 'Sports'];
-const categoryImage = {Games:'bowling', Outdoors:'hike', Coffee:'coffee', Creative:'art', Sports:'basketball'};
-const categoryLabels = {Games:'Game night', Outdoors:'Fresh air club', Coffee:'Coffee & connection', Creative:'Make something', Sports:'Play for the plot'};
+const categoryImage = {Games:'billiards', Outdoors:'hike', Coffee:'billiards', Creative:'art', Sports:'indoorsoccer'};
+const imageSrc = name => {
+  const file = name === 'coffee' ? 'billiards' : name;
+  return `assets/${file}.${file === 'billiards' ? 'png' : 'jpg'}`;
+};
+const categoryLabels = {Games:'Pool', Outdoors:'Hikes', Coffee:'Coffee', Creative:'Make something', Sports:'Soccer'};
 const categoryNotes = {Games:'Good games.\nEven better people.', Outdoors:'A little fresh air.\nA fresh perspective.', Coffee:'Less scrolling.\nMore coffee.', Creative:'Make a little mess.\nMake a new friend.', Sports:'Show up.\nFind your team.'};
 const sampleEvents = [
-  {id:'bowling-night',title:'Strikes & good vibes',category:'Games',date:'2026-10-24',start:'18:00',end:'20:00',location:'BSC Games Room',image:'bowling',imageAlt:'A bowler taking a shot in a colorful neon bowling alley',count:5,capacity:8,description:'A few rounds of bowling, a questionable victory dance, and some new campus friends. Come hang out at the BSC Games Room. No skills required — gutter balls are part of the experience.',note:'Bring your Bronco ID and a little friendly competition. Meet by the front desk! 🎳',cost:'Bring money for lane & shoe rental'},
+  {id:'soccer-night',title:'Indoor Soccer',category:'Sports',date:'2026-10-24',start:'18:00',end:'20:00',location:'BSC BRIC',image:'indoorsoccer',imageAlt:'A soccer ball on an indoor court',count:5,capacity:10,description:'A few rounds of soccer, and some new campus friends. Come hang out at the BRIC. No skills required — mispasses are part of the experience.',note:'Bring your Bronco ID and a little friendly competition.'},
   {id:'golden-hour-hike',title:'Chasing the golden hour',category:'Outdoors',date:'2026-10-25',start:'16:00',end:'18:00',location:'Campus trailhead',image:'hike',imageAlt:'Hikers on a mountain ridge in warm golden sunset light',count:6,capacity:12,description:'Let’s close the laptop and catch a sunset together. We’ll take a relaxed walk along the campus trails, stop for photos, and enjoy the view. All paces welcome — this is a hangout, not a race.',note:'Meet at the campus trailhead. Bring water, comfy shoes, and a light layer. 🌄',cost:'Free to join'},
-  {id:'coffee-and-catchup',title:'Coffee, campus & catch-ups',category:'Coffee',date:'2026-10-26',start:'10:00',end:'11:30',location:'BSC café patio',image:'coffee',imageAlt:'Fresh pour-over coffee being prepared at a café',count:3,capacity:6,description:'Your Monday deserves a soft start. Grab your favorite drink and join us on the café patio for an easy conversation. Come solo, bring a friend, or just take a break between classes.',note:'Look for the green notebook on the table. First-timers especially welcome. ☕',cost:'Buy your own drink'}
+  {id:'Pool',title:'Pool',category:'Games',date:'2026-10-26',start:'10:00',end:'11:30',location:'BSC Games Room',image:'billiards',imageAlt:'A player lining up a shot on a green pool table',count:1,capacity:2,description:'Come try your skill at pool!',note:'Grab a stick at the front desk'}
 ];
 
 function loadState() {
   const defaults = {joined:['coffee-and-catchup'],saved:['golden-hour-hike'],custom:[],profile:{name:'Johnny Park',handle:'johnnyonthequad',bio:'Collecting good memories, not just units. 🌱\nAlways down for a game, a trail, or one more coffee.'}};
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!stored || typeof stored !== 'object') return defaults;
-    if (Array.isArray(stored.joined)) defaults.joined = stored.joined.filter(id => typeof id === 'string');
-    if (Array.isArray(stored.saved)) defaults.saved = stored.saved.filter(id => typeof id === 'string');
-    if (Array.isArray(stored.custom)) defaults.custom = stored.custom.filter(isValidEvent).slice(0,50);
-    if (stored.profile && typeof stored.profile.name === 'string' && typeof stored.profile.handle === 'string' && typeof stored.profile.bio === 'string') {
-      defaults.profile = {name:stored.profile.name.slice(0,40), handle:stored.profile.handle.slice(0,30), bio:stored.profile.bio.slice(0,180)};
+    if (stored && typeof stored === 'object') {
+      if (Array.isArray(stored.joined)) defaults.joined = stored.joined.filter(id => typeof id === 'string');
+      if (Array.isArray(stored.saved)) defaults.saved = stored.saved.filter(id => typeof id === 'string');
+      if (stored.profile && typeof stored.profile.name === 'string' && typeof stored.profile.handle === 'string' && typeof stored.profile.bio === 'string') {
+        defaults.profile = {name:stored.profile.name.slice(0,40), handle:stored.profile.handle.slice(0,30), bio:stored.profile.bio.slice(0,180)};
+      }
+      if (Array.isArray(stored.custom) && stored.custom.length) {
+        stored.custom = [];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+      }
     }
   } catch { /* A blocked or cleared storage area falls back to the demo. */ }
+  try {
+    const sessionEvents = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+    if (Array.isArray(sessionEvents)) defaults.custom = sessionEvents.filter(isValidEvent).slice(0,50);
+  } catch { /* This visit starts from the three sample events. */ }
   return defaults;
 }
 function isValidEvent(event) {
@@ -51,7 +64,12 @@ const day = event => dateObject(event).getDate();
 function timeLabel(time) { return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}).replace(':00',''); }
 const timeRange = event => `${timeLabel(event.start)} – ${timeLabel(event.end)}`;
 function saveState() {
-  try { localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); return true; }
+  try {
+    const {custom, ...persisted} = state;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({...persisted, custom:[]}));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(custom));
+    return true;
+  }
   catch { if (!persistenceWarningShown) { persistenceWarningShown = true; setTimeout(() => notify('Browser storage is unavailable. Changes last for this visit.'),1200); } return false; }
 }
 function notify(message) {
@@ -80,7 +98,7 @@ function cardHTML(event,index) {
   const remaining = spots(event);
   return `<article class="event-card" data-event="${escapeHTML(event.id)}" style="animation-delay:${Math.min(index,5)*35}ms">
     <button class="card-image-button" data-open="${escapeHTML(event.id)}" aria-label="View ${escapeHTML(event.title)} details">
-      <img src="assets/${escapeHTML(event.image)}.jpg" alt="${escapeHTML(event.imageAlt || event.title)}" ${index>2?'loading="lazy"':''}>
+      <img src="${escapeHTML(imageSrc(event.image))}" alt="${escapeHTML(event.imageAlt || event.title)}" ${index>2?'loading="lazy"':''}>
       <span class="image-shade"></span><span class="date-badge"><small>${month(event)}</small><strong>${day(event)}</strong></span>
       <span class="spots-badge"><span class="dot"></span>${remaining>0?`${remaining} spots left`:'Circle is full'}</span>
       <span class="photo-label">${icon('pin')}${escapeHTML(event.location)}</span><span class="card-open-hint">${icon('arrow')}</span>
@@ -96,15 +114,14 @@ function renderEvents() {
   let visible = events().filter(event => (currentTab==='hosting'||(currentTab==='going'?state.joined:state.saved).includes(event.id)) && (currentFilter==='All'||event.category===currentFilter) && (!search || `${event.title} ${event.category} ${event.location} ${event.description}`.toLowerCase().includes(search)));
   const sort = $('#sort').value;
   visible.sort((a,b) => sort==='spots'?spots(b)-spots(a):(sort==='latest'?-1:1)*(`${a.date}T${a.start}`.localeCompare(`${b.date}T${b.start}`)));
-  visible = visible.slice(0, 3);
   $('#event-grid').innerHTML = visible.map(cardHTML).join('');
   $('#empty-state').hidden = visible.length>0;
   $('#event-grid').hidden = visible.length===0;
   const hostedCount = $('#hosted-count');
-  if (hostedCount) hostedCount.textContent = Math.min(3, events().length);
-  $('#hosting-count').textContent = Math.min(3, events().length);
-  $('#going-count').textContent = Math.min(3, events().filter(isJoined).length);
-  $('#saved-count').textContent = Math.min(3, events().filter(event => state.saved.includes(event.id)).length);
+  if (hostedCount) hostedCount.textContent = events().length;
+  $('#hosting-count').textContent = events().length;
+  $('#going-count').textContent = events().filter(isJoined).length;
+  $('#saved-count').textContent = events().filter(event => state.saved.includes(event.id)).length;
   const headings = {hosting:'Good plans, better company',going:'Your next campus memories',saved:'Keep a little something planned'};
   const subtitles = {hosting:'Something you’re into? There’s a spot for you.',going:'You’re on the list. We’ll meet you there.',saved:'The plans you’re keeping an eye on. Make one happen.'};
   const eventsHeading = $('#events-heading');
@@ -158,8 +175,8 @@ function renderDetail(event) {
   const focusAction = document.activeElement?.dataset.detailAction;
   $('#event-detail').innerHTML = `<div class="event-detail-layout">
     <button class="dialog-close icon-button" data-close="event-dialog" aria-label="Close event details">${icon('close')}</button>
-    <div class="detail-photo"><img src="assets/${escapeHTML(event.image)}.jpg" alt="${escapeHTML(event.imageAlt || event.title)}"><div class="detail-photo-note"><div class="eyebrow">A LITTLE MORE OFFLINE</div><p>${escapeHTML(categoryNotes[event.category]).replace(/\n/g,'<br>')}</p></div></div>
-    <div class="detail-content"><div class="detail-host"><img src="assets/avatar.jpg" alt=""><div><strong>${escapeHTML(state.profile.name)}</strong>is bringing people together</div></div>
+    <div class="detail-photo"><img src="${escapeHTML(imageSrc(event.image))}" alt="${escapeHTML(event.imageAlt || event.title)}"><div class="detail-photo-note"><div class="eyebrow">A LITTLE MORE OFFLINE</div><p>${escapeHTML(categoryNotes[event.category]).replace(/\n/g,'<br>')}</p></div></div>
+    <div class="detail-content"><div class="detail-host"><img src="assets/teamphoto.jpeg" alt=""><div><strong>${escapeHTML(state.profile.name)}</strong>is bringing people together</div></div>
       <span class="detail-category">${escapeHTML(categoryLabels[event.category])}</span><h2 id="event-title">${escapeHTML(event.title)}</h2>
       <div class="detail-meta"><div>${icon('calendar')}<div><strong>${longDate(event)}</strong><small>${timeRange(event)} · Pacific time</small></div></div><div>${icon('pin')}<div><strong>${escapeHTML(event.location)}</strong><small>Cal Poly Pomona campus</small></div></div><div>${icon('users')}<div><strong>${attendance(event)} of ${event.capacity} spots filled</strong><small>${remaining?`${remaining} ${remaining===1?'spot':'spots'} left · `:''}${escapeHTML(event.cost || 'Free to join')}</small></div></div></div>
       <p class="detail-description">${escapeHTML(event.description)}</p><div class="host-note"><span>💬</span><div>${escapeHTML(event.note)}</div></div>
@@ -199,7 +216,7 @@ function showCreateForm() {
     <div class="form-field"><label for="event-date">Date</label><input id="event-date" type="date" name="date" min="${minDate}" value="${minDate}" required></div><div class="form-row"><div class="form-field"><label for="event-start">Starts</label><input id="event-start" type="time" name="start" value="16:00" required></div><div class="form-field"><label for="event-end">Ends</label><input id="event-end" type="time" name="end" value="18:00" required></div></div>
     <div class="form-field"><label for="event-description">The details</label><textarea id="event-description" name="description" required maxlength="600" placeholder="What’s happening? What should people bring?"></textarea></div>
     <div class="form-field"><label for="event-note">A note from you (optional)</label><input id="event-note" name="note" maxlength="180" placeholder="All levels welcome. Come as you are!"></div>
-    <p class="form-error" id="form-error" role="alert" hidden></p><button class="button button-green submit-button" type="submit">${icon('plus')}Create event</button><p class="form-help">A hobby photo is added for you. Demo events are saved on this browser.</p></form>`);
+    <p class="form-error" id="form-error" role="alert" hidden></p><button class="button button-green submit-button" type="submit">${icon('plus')}Create event</button><p class="form-help">A hobby photo is added for you. Events you create stay until you close this window.</p></form>`);
   $('#create-form').addEventListener('submit',event => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.target));
@@ -299,7 +316,7 @@ $$('dialog').forEach(dialog=>{
     if(!$$('dialog[open]').length){document.body.classList.remove('modal-open');document.body.append($('#toast'));}
   });
 });
-$('#about-btn').addEventListener('click',()=>showInfo('Built for a little more offline',`<p class="info-intro">A campus profile concept for finding your people through the things you love.</p><p class="info-body">This is an interactive front-end demo. Events, names, attendance, and profile stats are sample data. RSVPs, saved events, new events, and profile edits are stored only in this browser. Shared links open sample events; custom plans need a backend to be shared between people.</p><p class="info-body">Made with plain HTML, CSS, and JavaScript. Event and profile photography from <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer">Unsplash</a>. See the included README for setup and customization.</p>`));
+$('#about-btn').addEventListener('click',()=>showInfo('Built for a little more offline',`<p class="info-intro">A campus profile concept for finding your people through the things you love.</p><p class="info-body">This is an interactive front-end demo. Events, names, attendance, and profile stats are sample data. RSVPs, saved events, and profile edits are stored only in this browser. Events you create last until you close the window. Shared links open sample events; custom plans need a backend to be shared between people.</p><p class="info-body">Made with plain HTML, CSS, and JavaScript. Event and profile photography from <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer">Unsplash</a>. See the included README for setup and customization.</p>`));
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!$$('dialog[open]').length&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){event.preventDefault();$('#nav-search-panel').hidden=false;$('#nav-search').setAttribute('aria-expanded','true');$('#search').focus();}});
 window.addEventListener('hashchange',()=>{const id=location.hash.startsWith('#event=')?decodeURIComponent(location.hash.slice(7)):null;if(id&&getEvent(id))openEvent(id,{updateHash:false});});
 
