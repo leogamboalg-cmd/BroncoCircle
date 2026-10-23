@@ -1,0 +1,99 @@
+/* Discover uses the profile's fonts, palette, controls, and page shell. */
+.discover-intro{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:52px 0 32px}
+.discover-intro h1{display:block;margin:9px 0 8px}
+.discover-intro h1 .gold-period{margin-left:1px}
+.discover-intro p{font-size:13px;color:#818b79;margin:0}
+.discover-intro>.button{flex-shrink:0}
+.discover-tabs{justify-content:space-between}
+.feed-tab-list{height:100%;display:flex;gap:34px;min-width:0}
+.discover-layout{display:grid;grid-template-columns:minmax(0,1fr) 272px;gap:32px;align-items:start}
+.campus-feed{display:grid;gap:25px;min-width:0}
+.feed-card{background:var(--white);border:1px solid #e7eadd;border-radius:14px;overflow:hidden}
+.feed-host{display:flex;align-items:center;gap:10px;padding:18px 21px 0}
+.host-avatar{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;border-radius:50%;object-fit:cover;background:#e3e8d7;color:#64765b;font-size:11px;font-weight:700}
+.host-avatar.avatar-mc{background:#eee5d8;color:#8f795c}
+.host-avatar.avatar-sp{background:#dfe8e8;color:#627e7c}
+.feed-host-copy{min-width:0;flex:1;font-size:12px;color:#8b9582}
+.feed-host-copy strong{color:#52674a;font-weight:600}
+.feed-host-copy small{display:block;font-size:10px;margin-top:1px;color:#8d9785}
+.feed-host .save-button{width:32px;height:32px}
+.feed-overview{padding:17px 21px 16px}
+.feed-category{display:flex;gap:5px;align-items:center;color:#899a76;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:1.25px;margin-bottom:5px}
+.feed-title{padding:0;text-align:left;font-family:var(--heading);font-weight:800;letter-spacing:-.65px;font-size:21px;line-height:1.4}
+.feed-title:hover{color:var(--green)}
+.feed-location{display:flex;align-items:center;gap:5px;color:#89957f;font-size:11px;margin:6px 0 0}
+.feed-location .icon{width:13px;height:13px}
+.feed-image{display:block;position:relative;width:100%;padding:0;aspect-ratio:1.9;overflow:hidden;background:var(--green-light);text-align:left}
+.feed-image>img{width:100%;height:100%;object-fit:cover;filter:saturate(.84);transition:transform .4s}
+.feed-image:hover>img{transform:scale(1.025)}
+.feed-image .image-shade{background:linear-gradient(transparent 55%,#10281e55)}
+.feed-image .date-badge{top:16px;left:20px}
+.feed-photo-hint{display:flex;align-items:center;gap:6px;position:absolute;right:19px;bottom:14px;color:white;background:#17291e66;border:1px solid #ffffff33;border-radius:6px;padding:5px 9px;font-size:10px;backdrop-filter:blur(6px)}
+.feed-photo-hint .icon{width:13px;height:13px;transition:transform .2s}
+.feed-card.expanded .feed-photo-hint .icon{transform:rotate(180deg)}
+.feed-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 21px}
+.feed-when{display:flex;align-items:center;gap:7px;color:#849078;font-size:11px;flex-wrap:wrap}
+.feed-when .icon{width:14px;height:14px}
+.feed-when .separator{color:#c0c8b8}
+.feed-going{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.feed-going .attendee-count{font-size:10px}
+.feed-going .rsvp-small{font-size:10px;min-height:33px;padding:7px 12px}
+.feed-going .rsvp-small .icon{width:12px;height:12px}
+.feed-expanded{padding:0 21px 19px}
+.feed-description{font-size:12px;line-height:1.85;color:#77866b;margin:0;padding-top:3px;overflow-wrap:anywhere}
+.feed-expanded .host-note{margin:13px 0 0}
+.feed-extra-actions{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px}
+.feed-text-action{display:inline-flex;align-items:center;gap:6px;color:#7b8c6e;font-size:10px;padding:2px 0}
+.feed-text-action:hover{color:var(--green)}
+.feed-text-action .icon{width:14px;height:14px}
+.feed-bottom{border-top:1px solid #eef0e7;padding:12px 21px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.feed-comments-toggle,.feed-details-toggle{display:inline-flex;align-items:center;gap:6px;color:#86947a;font-size:11px;padding:3px 0}
+.feed-comments-toggle .icon{width:16px;height:16px}
+.feed-details-toggle .icon{width:13px;height:13px}
+.feed-comments-toggle:hover,.feed-details-toggle:hover{color:var(--green)}
+.feed-card.expanded .feed-details-toggle .icon{transform:rotate(180deg)}
+.feed-caption{font-size:11px;line-height:1.75;color:#849078;margin:0 21px 15px;overflow-wrap:anywhere}
+.feed-caption strong{font-weight:600;color:#667d58;margin-right:4px}
+.feed-comments{border-top:1px solid #eef0e7;background:#fafbf7;padding:19px 21px}
+.feed-comments h3{font-family:var(--heading);font-size:12px;font-weight:700;margin:0 0 17px;color:#536c48}
+.comment-list{display:grid;gap:16px}
+.feed-comment{display:flex;align-items:flex-start;gap:9px}
+.feed-comment .host-avatar{width:28px;height:28px;font-size:9px}
+.comment-copy{flex:1;min-width:0}
+.comment-copy strong{display:block;font-size:10px;font-weight:600;color:#657c56}
+.comment-copy p{font-size:12px;color:#7b896e;line-height:1.7;margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.no-comments{font-size:11px;color:#87947a;margin:0}
+.comment-form{display:flex;align-items:flex-start;gap:9px;margin-top:18px}
+.comment-form .host-avatar{width:28px;height:28px;margin-top:5px}
+.comment-input-wrap{flex:1;min-width:0}
+.comment-input-wrap textarea{display:block;resize:vertical;width:100%;min-height:42px;max-height:160px;padding:10px 12px;border:1px solid #dfe6d5;border-radius:8px;background:white;color:var(--text);font:inherit;font-size:12px;line-height:1.6}
+.comment-input-wrap textarea::placeholder{color:#9aa58e}
+.comment-form .button{padding:10px 12px;font-size:10px;min-height:42px}
+.feed-end{display:flex;align-items:center;justify-content:center;gap:14px;color:#99a18e;font-size:10px;text-align:center;margin:28px 0 8px}
+.feed-end>span{flex:1;max-width:65px;border-top:1px solid var(--line)}
+.discover-sidebar{display:grid;gap:20px}
+.sidebar-card{background:white;border:1px solid #e7eadd;border-radius:14px;padding:21px}
+.sidebar-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px}
+.sidebar-heading h2{font-size:14px;letter-spacing:-.3px}
+.sidebar-heading>.icon{width:16px;height:16px;color:#98a588}
+.next-plan-link{display:block;padding:0;text-align:left;width:100%}
+.next-plan-link>img{aspect-ratio:1.65;object-fit:cover;width:100%;border-radius:8px;filter:saturate(.84);margin-bottom:13px}
+.next-plan-link>strong{display:block;font-family:var(--heading);font-size:13px;letter-spacing:-.3px;line-height:1.6}
+.next-plan-link:hover>strong{color:var(--green)}
+.next-plan-meta{display:flex;align-items:center;gap:5px;font-size:10px;color:#8c9880;margin-top:7px}
+.next-plan-meta .icon{width:12px;height:12px}
+.next-plan-empty{font-size:12px;line-height:1.8;color:#87947a;margin:0}
+.sidebar-link{display:flex;align-items:center;justify-content:space-between;color:#657f53;font-size:10px;font-weight:600;border-top:1px solid #eef0e7;margin-top:18px;padding-top:15px}
+.sidebar-link .icon{width:13px;height:13px}
+.sidebar-link:hover{color:var(--green)}
+.sidebar-invite{background:#f5f7ee}
+.sidebar-invite .invite-icon{width:36px;height:36px;margin-bottom:15px}
+.sidebar-invite h2{font-size:21px;letter-spacing:-.7px;line-height:1.45}
+.sidebar-invite p{font-size:11px;color:#8b967e;line-height:1.9;margin:10px 0 17px}
+.sidebar-invite .button{font-size:10px;padding:9px 12px}
+.campus-note{display:flex;align-items:center;gap:7px;color:#9ba48f;font-size:9px;line-height:1.7;margin:0 4px}
+@media(min-width:1500px){.discover-layout{grid-template-columns:minmax(0,1fr) 290px;gap:38px}}
+@media(max-width:1000px){.discover-layout{grid-template-columns:minmax(0,1fr) 235px;gap:23px}.sidebar-card{padding:18px}.feed-actions{align-items:flex-start;gap:12px}.feed-when{font-size:10px;gap:5px}.feed-when .separator{display:none}.feed-when .feed-time{flex-basis:100%;margin-left:19px}.feed-going{gap:8px}.feed-going .attendee-count{font-size:9px}.feed-going .rsvp-small{padding:7px 9px}.discover-intro h1{font-size:29px}}
+@media(max-width:820px){.discover-layout{grid-template-columns:minmax(0,1fr)}.discover-sidebar{display:none}.discover-intro{padding:39px 0 27px}.discover-intro h1{font-size:29px}.discover-intro>.button{font-size:10px;padding:10px 12px}.feed-actions{align-items:center}.feed-when{font-size:11px;gap:7px}.feed-when .separator{display:inline}.feed-when .feed-time{flex-basis:auto;margin-left:0}.feed-going .attendee-count{font-size:10px}.feed-going .rsvp-small{padding:7px 12px}}
+@media(max-width:650px){.discover-intro{padding:31px 0 23px;gap:16px}.discover-intro h1{font-size:26px;line-height:1.4;margin:8px 0;max-width:300px}.discover-intro .profile-eyebrow{font-size:8px;letter-spacing:1.2px}.discover-intro p{font-size:11px;line-height:1.7}.discover-intro>.button{display:none}.discover-tabs{gap:14px}.feed-tab-list{gap:24px;flex:1}.discover-tabs .create-button{margin-left:auto;flex-shrink:0}.campus-feed{gap:20px}.feed-card{border-radius:12px}.feed-host{padding:15px 16px 0;gap:9px}.host-avatar{width:32px;height:32px;font-size:10px}.feed-host-copy{font-size:11px}.feed-host-copy small{font-size:9px}.feed-overview{padding:14px 16px 13px}.feed-category{font-size:7px;letter-spacing:1px}.feed-title{font-size:19px}.feed-location{font-size:10px}.feed-image{aspect-ratio:1.5}.feed-image .date-badge{top:12px;left:15px}.feed-photo-hint{font-size:9px;right:14px;bottom:12px}.feed-actions{padding:13px 16px;gap:9px}.feed-when{font-size:10px;gap:4px}.feed-when .icon{width:12px;height:12px}.feed-when .separator{display:none}.feed-when .feed-time{flex-basis:100%;margin-left:16px}.feed-going{gap:9px}.feed-going .attendee-count{font-size:10px}.feed-going .rsvp-small{width:auto;font-size:10px;min-height:34px;padding:7px 10px;border-radius:6px}.feed-expanded{padding:0 16px 16px}.feed-description{font-size:11px}.feed-bottom{padding:11px 16px}.feed-caption{margin:0 16px 13px;font-size:10px}.feed-comments{padding:17px 16px}.comment-form{flex-wrap:wrap}.comment-input-wrap textarea{font-size:16px}.comment-form .button{margin-left:auto;min-height:34px;padding:7px 12px}.comment-form .host-avatar{display:none}.comment-input-wrap{flex-basis:100%}.feed-end{font-size:9px;gap:8px;margin-top:24px}}
+@media(max-width:360px){.feed-tab-list{gap:17px}.discover-tabs{gap:9px}.feed-when{font-size:9px}.feed-going{gap:7px}.feed-going .rsvp-small{font-size:9px;padding:7px 9px}.feed-host-copy{font-size:10px}}

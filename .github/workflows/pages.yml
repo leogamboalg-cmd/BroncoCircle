@@ -1,0 +1,45 @@
+name: Deploy BroncoCircle to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'broncocircle/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Verify website files
+        run: |
+          test -s broncocircle/index.html
+          test -s broncocircle/styles.css
+          test -s broncocircle/app.js
+          test -d broncocircle/assets
+          test -n "$(find broncocircle/assets -type f -print -quit)"
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Publish the folder contents so index.html is at the Pages root.
+          path: ./broncocircle
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

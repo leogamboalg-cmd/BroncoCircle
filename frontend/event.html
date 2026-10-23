@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Event · BroncoCircle</title>
+  <link rel="stylesheet" href="/feed.css">
+  <link rel="stylesheet" href="/event.css">
+  <script src="/event.js" defer></script>
+</head>
+<body>
+  <main>
+    <a href="/">← Back to feed</a>
+    <p id="event-status" role="status" aria-live="polite">Loading event…</p>
+    <a id="event-login" href="/" hidden>Log in or set up your profile</a>
+    <article id="event-detail" hidden>
+      <img id="event-cover" alt="" hidden>
+      <p id="event-category" hidden></p>
+      <h1 id="event-title"></h1>
+      <p id="event-host"></p>
+      <dl>
+        <dt>When</dt><dd id="event-time"></dd>
+        <dt>Where</dt><dd id="event-location"></dd>
+        <dt>Attendance</dt><dd id="event-attendance"></dd>
+      </dl>
+      <p id="event-description"></p>
+      <p id="event-note" hidden></p>
+      <h2>Who's going</h2>
+      <ul id="event-attendees"></ul>
+      <button id="event-rsvp" type="button">RSVP</button>
+    </article>
+    <button id="event-refresh" type="button">Refresh details</button>
+  </main>
+</body>
+</html>

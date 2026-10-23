@@ -7,6 +7,7 @@ const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}
 const escapeHTML = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const STORAGE_KEY = 'broncocircle-profile-v1';
 const SESSION_KEY = 'broncocircle-session-events';
+const isDiscoverPage = document.body.dataset.page === 'discover';
 const categories = ['Games', 'Outdoors', 'Coffee', 'Creative', 'Sports'];
 const categoryImage = {Games:'billiards', Outdoors:'hike', Coffee:'billiards', Creative:'art', Sports:'indoorsoccer'};
 const imageSrc = name => {
@@ -19,6 +20,11 @@ const sampleEvents = [
   {id:'soccer-night',title:'Indoor Soccer',category:'Sports',date:'2026-10-24',start:'18:00',end:'20:00',location:'BSC BRIC',image:'indoorsoccer',imageAlt:'A soccer ball on an indoor court',count:5,capacity:10,description:'A few rounds of soccer, and some new campus friends. Come hang out at the BRIC. No skills required — mispasses are part of the experience.',note:'Bring your Bronco ID and a little friendly competition.'},
   {id:'golden-hour-hike',title:'Chasing the golden hour',category:'Outdoors',date:'2026-10-25',start:'16:00',end:'18:00',location:'Campus trailhead',image:'hike',imageAlt:'Hikers on a mountain ridge in warm golden sunset light',count:6,capacity:12,description:'Let’s close the laptop and catch a sunset together. We’ll take a relaxed walk along the campus trails, stop for photos, and enjoy the view. All paces welcome — this is a hangout, not a race.',note:'Meet at the campus trailhead. Bring water, comfy shoes, and a light layer. 🌄',cost:'Free to join'},
   {id:'Pool',title:'Pool',category:'Games',date:'2026-10-26',start:'10:00',end:'11:30',location:'BSC Games Room',image:'billiards',imageAlt:'A player lining up a shot on a green pool table',count:1,capacity:2,description:'Come try your skill at pool!',note:'Grab a stick at the front desk'}
+];
+const discoveryEvents = [
+  {id:'pool-between-classes',title:'One more game of pool?',category:'Games',date:'2026-10-25',start:'13:00',end:'14:30',location:'BSC Games Room',image:'pool',imageAlt:'Pool balls and a cue on a green billiards table',count:2,capacity:4,description:'A break between classes is better with a little friendly competition. Come play a few relaxed games of pool — beginners are very welcome.',note:'Meet by the pool tables. Bring your Bronco ID! 🎱',cost:'Bring money for table rental',host:{name:'Alex Rivera',initials:'AR',image:'friend',friend:true}},
+  {id:'sketch-and-unwind',title:'A sketchbook kind of afternoon',category:'Creative',date:'2026-10-26',start:'15:00',end:'16:30',location:'University Quad',image:'art',imageAlt:'Colorful art supplies ready for an afternoon of creating',count:3,capacity:8,description:'Bring a sketchbook, find a spot on the grass, and make something just for fun. No prompts, no pressure, and definitely no art major required.',note:'Bring something to draw with and a blanket if you have one. 🎨',cost:'Free to join',host:{name:'Maya Chen',initials:'MC',friend:true}},
+  {id:'pickup-after-class',title:'A little pickup, a little catch-up',category:'Sports',date:'2026-10-27',start:'17:00',end:'18:30',location:'BRIC outdoor courts',image:'basketball',imageAlt:'A basketball court ready for a friendly pickup game',count:6,capacity:10,description:'Let’s get a casual game going after class. All skill levels welcome. We’ll make teams when everyone gets here, so coming solo is perfect.',note:'Bring water, comfortable shoes, and your best team spirit. 🏀',cost:'Free to join',host:{name:'Sam Patel',initials:'SP',friend:false}}
 ];
 
 function loadState() {
@@ -52,7 +58,7 @@ let currentFilter = 'All';
 let currentEventId = null;
 let toastTimeout;
 let persistenceWarningShown = false;
-const events = () => [...sampleEvents, ...state.custom];
+const events = () => [...sampleEvents, ...discoveryEvents, ...state.custom];
 const getEvent = id => events().find(event => event.id === id);
 const isJoined = event => state.joined.includes(event.id);
 const attendance = event => event.count + (isJoined(event) ? 1 : 0);
@@ -83,6 +89,7 @@ function notify(message) {
 }
 function applyProfile() {
   const name = state.profile.name;
+  if (isDiscoverPage) { document.title = 'Discover · BroncoCircle'; return; }
   $('#profile-name').innerHTML = `${escapeHTML(name)} <span class="verified" aria-label="Campus verified">${icon('check')}</span>`;
   $('#profile-handle').innerHTML = `@${escapeHTML(state.profile.handle)} <span>·</span> he/him`;
   $('#profile-bio').innerHTML = escapeHTML(state.profile.bio).replace(/\n/g,'<br>');
@@ -110,16 +117,17 @@ function cardHTML(event,index) {
     </div></article>`;
 }
 function renderEvents() {
+  if (isDiscoverPage) { renderDiscover(); return; }
   const search = $('#search').value.trim().toLowerCase();
-  let visible = events().filter(event => (currentTab==='hosting'||(currentTab==='going'?state.joined:state.saved).includes(event.id)) && (currentFilter==='All'||event.category===currentFilter) && (!search || `${event.title} ${event.category} ${event.location} ${event.description}`.toLowerCase().includes(search)));
+  let visible = events().filter(event => (currentTab==='hosting'?!event.host:(currentTab==='going'?state.joined:state.saved).includes(event.id)) && (currentFilter==='All'||event.category===currentFilter) && (!search || `${event.title} ${event.category} ${event.location} ${event.description}`.toLowerCase().includes(search)));
   const sort = $('#sort').value;
   visible.sort((a,b) => sort==='spots'?spots(b)-spots(a):(sort==='latest'?-1:1)*(`${a.date}T${a.start}`.localeCompare(`${b.date}T${b.start}`)));
   $('#event-grid').innerHTML = visible.map(cardHTML).join('');
   $('#empty-state').hidden = visible.length>0;
   $('#event-grid').hidden = visible.length===0;
   const hostedCount = $('#hosted-count');
-  if (hostedCount) hostedCount.textContent = events().length;
-  $('#hosting-count').textContent = events().length;
+  if (hostedCount) hostedCount.textContent = events().filter(event => !event.host).length;
+  $('#hosting-count').textContent = events().filter(event => !event.host).length;
   $('#going-count').textContent = events().filter(isJoined).length;
   $('#saved-count').textContent = events().filter(event => state.saved.includes(event.id)).length;
   const headings = {hosting:'Good plans, better company',going:'Your next campus memories',saved:'Keep a little something planned'};
@@ -176,7 +184,7 @@ function renderDetail(event) {
   $('#event-detail').innerHTML = `<div class="event-detail-layout">
     <button class="dialog-close icon-button" data-close="event-dialog" aria-label="Close event details">${icon('close')}</button>
     <div class="detail-photo"><img src="${escapeHTML(imageSrc(event.image))}" alt="${escapeHTML(event.imageAlt || event.title)}"><div class="detail-photo-note"><div class="eyebrow">A LITTLE MORE OFFLINE</div><p>${escapeHTML(categoryNotes[event.category]).replace(/\n/g,'<br>')}</p></div></div>
-    <div class="detail-content"><div class="detail-host"><img src="assets/teamphoto.jpeg" alt=""><div><strong>${escapeHTML(state.profile.name)}</strong>is bringing people together</div></div>
+    <div class="detail-content"><div class="detail-host"><img src="${event.host?.image ? `assets/${escapeHTML(event.host.image)}.jpg` : 'assets/teamphoto.jpeg'}" alt=""><div><strong>${escapeHTML(event.host?.name || state.profile.name)}</strong>is bringing people together</div></div>
       <span class="detail-category">${escapeHTML(categoryLabels[event.category])}</span><h2 id="event-title">${escapeHTML(event.title)}</h2>
       <div class="detail-meta"><div>${icon('calendar')}<div><strong>${longDate(event)}</strong><small>${timeRange(event)} · Pacific time</small></div></div><div>${icon('pin')}<div><strong>${escapeHTML(event.location)}</strong><small>Cal Poly Pomona campus</small></div></div><div>${icon('users')}<div><strong>${attendance(event)} of ${event.capacity} spots filled</strong><small>${remaining?`${remaining} ${remaining===1?'spot':'spots'} left · `:''}${escapeHTML(event.cost || 'Free to join')}</small></div></div></div>
       <p class="detail-description">${escapeHTML(event.description)}</p><div class="host-note"><span>💬</span><div>${escapeHTML(event.note)}</div></div>
@@ -229,7 +237,7 @@ function showCreateForm() {
     state.custom.push({id,title:data.title.trim(),category:data.category,date:data.date,start:data.start,end:data.end,location:data.location.trim(),description:data.description.trim(),note:data.note.trim()||'Come as you are. Can’t wait to meet you!',capacity:Number(data.capacity),count:1,image:categoryImage[data.category],cost:'Check the host’s details'});
     saveState();
     currentFilter='All';$('#search').value='';$('#sort').value='soonest';
-    setFilter('All');selectTab('hosting');
+    setFilter('All');if(isDiscoverPage)selectFeedTab('discover');else selectTab('hosting');
     $('#form-dialog').close();openEvent(id);notify('A good plan is born. Your event is ready!');
   });
 }
@@ -273,20 +281,20 @@ function calendarDownload(id) {
 function downloadFile(blob,name) {const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function showInfo(title,content) {closeDialogs();$('#info-content').innerHTML=`<div class="eyebrow">BRONCOCIRCLE</div><h2 id="info-title">${escapeHTML(title)}<span class="gold-period">.</span></h2>${content}`;$('#info-dialog').showModal();document.body.classList.add('modal-open');}
 
-$$('.tab').forEach(button => button.addEventListener('click',()=>selectTab(button.dataset.tab)));
+$$('[data-tab]').forEach(button => button.addEventListener('click',()=>selectTab(button.dataset.tab)));
 $('.profile-tabs').addEventListener('keydown',event=>{
-  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)||!event.target.matches('.tab'))return;
-  event.preventDefault();const tabs=$$('.tab');let index=tabs.indexOf(event.target);index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;selectTab(tabs[index].dataset.tab);tabs[index].focus();
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)||!event.target.matches('[data-tab]'))return;
+  event.preventDefault();const tabs=$$('[data-tab]');let index=tabs.indexOf(event.target);index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;selectTab(tabs[index].dataset.tab);tabs[index].focus();
 });
 $$('.filter').forEach(button => button.addEventListener('click',()=>setFilter(button.dataset.filter)));
 $$('[data-hobby]').forEach(button=>button.addEventListener('click',()=>{selectTab('hosting');setFilter(button.dataset.hobby);$('#events').scrollIntoView({behavior:'smooth'});}));
 $('#search').addEventListener('input',renderEvents);
 $('#search').addEventListener('keydown',event=>{if(event.key==='Enter')$('#events').scrollIntoView({behavior:'smooth'});});
 $('#sort').addEventListener('change',renderEvents);
-$('#reset-filters').addEventListener('click',()=>{$('#search').value='';setFilter('All');selectTab('hosting');});
+$('#reset-filters').addEventListener('click',()=>{$('#search').value='';setFilter('All');if(isDiscoverPage)selectFeedTab('discover');else selectTab('hosting');});
 ['#create-event','#bottom-create','#nav-create'].forEach(selector=>$(selector).addEventListener('click',showCreateForm));
-$('#edit-profile').addEventListener('click',showEditForm);
-$('#share-profile').addEventListener('click',()=>shareEvent());
+$('#edit-profile')?.addEventListener('click',showEditForm);
+$('#share-profile')?.addEventListener('click',()=>shareEvent());
 $('#nav-search').addEventListener('click',()=>{
   const panel = $('#nav-search-panel');
   panel.hidden = !panel.hidden;
@@ -320,5 +328,9 @@ $('#about-btn').addEventListener('click',()=>showInfo('Built for a little more o
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!$$('dialog[open]').length&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){event.preventDefault();$('#nav-search-panel').hidden=false;$('#nav-search').setAttribute('aria-expanded','true');$('#search').focus();}});
 window.addEventListener('hashchange',()=>{const id=location.hash.startsWith('#event=')?decodeURIComponent(location.hash.slice(7)):null;if(id&&getEvent(id))openEvent(id,{updateHash:false});});
 
-applyProfile();renderEvents();
+applyProfile();
+if(!isDiscoverPage){
+  const initialTab = new URLSearchParams(location.search).get('tab');
+  if(['going','saved'].includes(initialTab))selectTab(initialTab);else renderEvents();
+}
 if(location.hash.startsWith('#event=')){try{const initialId=decodeURIComponent(location.hash.slice(7));if(getEvent(initialId))openEvent(initialId,{updateHash:false});}catch{/* Ignore a malformed URL fragment. */}}

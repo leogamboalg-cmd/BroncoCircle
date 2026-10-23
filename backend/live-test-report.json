@@ -1,0 +1,270 @@
+{
+  "run": "live-fe01e55d-00f2-43f7-a082-f0c6e9b01b04",
+  "timestamp": "2026-10-23T22:24:19.345Z",
+  "results": [
+    {
+      "name": "API health",
+      "passed": true
+    },
+    {
+      "name": "Direct MongoDB ping",
+      "passed": true
+    },
+    {
+      "name": "Signup One and safe account response",
+      "passed": true
+    },
+    {
+      "name": "Password stored as hash for One",
+      "passed": true
+    },
+    {
+      "name": "Login One and reject previous token",
+      "passed": true
+    },
+    {
+      "name": "Missing profile blocks posting for One",
+      "passed": true
+    },
+    {
+      "name": "Create account-owned profile for One",
+      "passed": true
+    },
+    {
+      "name": "Signup Two and safe account response",
+      "passed": true
+    },
+    {
+      "name": "Password stored as hash for Two",
+      "passed": true
+    },
+    {
+      "name": "Login Two and reject previous token",
+      "passed": true
+    },
+    {
+      "name": "Missing profile blocks posting for Two",
+      "passed": true
+    },
+    {
+      "name": "Create account-owned profile for Two",
+      "passed": true
+    },
+    {
+      "name": "Signup Outsider and safe account response",
+      "passed": true
+    },
+    {
+      "name": "Password stored as hash for Outsider",
+      "passed": true
+    },
+    {
+      "name": "Login Outsider and reject previous token",
+      "passed": true
+    },
+    {
+      "name": "Missing profile blocks posting for Outsider",
+      "passed": true
+    },
+    {
+      "name": "Create account-owned profile for Outsider",
+      "passed": true
+    },
+    {
+      "name": "Duplicate email rejected",
+      "passed": true
+    },
+    {
+      "name": "Wrong password rejected",
+      "passed": true
+    },
+    {
+      "name": "Missing and forged tokens rejected",
+      "passed": true
+    },
+    {
+      "name": "Duplicate profile rejected",
+      "passed": true
+    },
+    {
+      "name": "Profile edits cannot transfer ownership",
+      "passed": true
+    },
+    {
+      "name": "Invalid schedule rejected",
+      "passed": true
+    },
+    {
+      "name": "Real matching finds compatible user and excludes nonoverlap",
+      "passed": true
+    },
+    {
+      "name": "Accept match and keep other candidates unjoined",
+      "passed": true
+    },
+    {
+      "name": "Invitation visible and outsider denied joining",
+      "passed": true
+    },
+    {
+      "name": "Concurrent joins do not duplicate members",
+      "passed": true
+    },
+    {
+      "name": "Circle list is scoped to current user",
+      "passed": true
+    },
+    {
+      "name": "Message author cannot be impersonated; persisted message is readable",
+      "passed": true
+    },
+    {
+      "name": "Outsider denied reading and writing chat",
+      "passed": true
+    },
+    {
+      "name": "Blank message and malformed circle ID rejected",
+      "passed": true
+    },
+    {
+      "name": "Text-only post persists with authenticated author",
+      "passed": true
+    },
+    {
+      "name": "Shared feed readable, my posts isolated",
+      "passed": true
+    },
+    {
+      "name": "Concurrent repeated likes are idempotent",
+      "passed": true
+    },
+    {
+      "name": "Comment identity, persistence, and populated retrieval",
+      "passed": true
+    },
+    {
+      "name": "Unsafe image URL and incomplete event rejected",
+      "passed": true
+    },
+    {
+      "name": "Event post stores title, location, and date",
+      "passed": true
+    },
+    {
+      "name": "Event creation saves simple details but ignores injected attendees",
+      "passed": true
+    },
+    {
+      "name": "Event details include host, spots remaining, and my RSVP state",
+      "passed": true
+    },
+    {
+      "name": "Invalid capacity and end time rejected",
+      "passed": true
+    },
+    {
+      "name": "RSVP uses own profile and repeated concurrent requests add only once",
+      "passed": true
+    },
+    {
+      "name": "Full event denies new attendee but allows existing attendee to retry",
+      "passed": true
+    },
+    {
+      "name": "Cancel is repeatable and another user can take the released spot",
+      "passed": true
+    },
+    {
+      "name": "Two users racing for one seat cannot overbook",
+      "passed": true
+    },
+    {
+      "name": "Legacy events without capacity allow RSVP",
+      "passed": true
+    },
+    {
+      "name": "RSVP rejects normal posts, missing posts, invalid IDs, and missing auth",
+      "passed": true
+    },
+    {
+      "name": "Upload requires login",
+      "passed": true
+    },
+    {
+      "name": "Upload rejects missing file and wrong field",
+      "passed": true
+    },
+    {
+      "name": "Upload rejects MIME spoofing and unsupported files",
+      "passed": true
+    },
+    {
+      "name": "Upload rejects file larger than 5 MB",
+      "passed": true
+    },
+    {
+      "name": "Real Cloudinary upload returns secure URL",
+      "passed": true
+    },
+    {
+      "name": "Uploaded image is publicly accessible as image bytes",
+      "passed": true
+    },
+    {
+      "name": "Image URL saved in MongoDB and returned through feed",
+      "passed": true
+    },
+    {
+      "name": "Profile avatar saves and appears with event attendees",
+      "passed": true
+    },
+    {
+      "name": "Empty meetup list for a new circle",
+      "passed": true
+    },
+    {
+      "name": "Meetup creation and listing require login and membership",
+      "passed": true
+    },
+    {
+      "name": "Invalid meetup circle IDs and missing circles rejected",
+      "passed": true
+    },
+    {
+      "name": "Invalid meetup fields rejected without writes",
+      "passed": true
+    },
+    {
+      "name": "Create meetup through API, ignore injected circle/votes, verify persistence",
+      "passed": true
+    },
+    {
+      "name": "Second member lists newly created meetup and zero vote counts",
+      "passed": true
+    },
+    {
+      "name": "Outsider and invalid proposed-time votes denied",
+      "passed": true
+    },
+    {
+      "name": "Real MongoDB vote pipeline prevents duplicate concurrent votes",
+      "passed": true
+    },
+    {
+      "name": "Two members vote and meetup listing reflects current totals",
+      "passed": true
+    },
+    {
+      "name": "Meetup lists are scoped to the requested circle",
+      "passed": true
+    },
+    {
+      "name": "Frontend assets accessible without embedded Cloudinary secrets",
+      "passed": true
+    },
+    {
+      "name": "Clean up only this run's records and uploaded image",
+      "passed": true
+    }
+  ]
+}
