@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BroncoCircle Feed</title>
+  <link rel="stylesheet" href="/feed.css">
+  <script src="/feed.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>BroncoCircle</h1>
+    <p id="status" role="status" aria-live="polite">Log in to see your campus feed.</p>
+    <section id="auth">
+      <h2>Your account</h2>
+      <form id="account-form">
+        <label>Name (for signup)<input name="name" autocomplete="name" maxlength="100"></label>
+        <label>Email<input name="email" type="email" autocomplete="username" required></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required></label>
+        <button name="action" value="login">Log in</button>
+        <button name="action" value="signup">Sign up</button>
+      </form>
+    </section>
+    <button id="logout" hidden>Log out on this device</button>
+    <section id="setup" hidden>
+      <h2>Create your profile</h2>
+      <form id="profile-form">
+        <label>Name<input name="name" required maxlength="100"></label>
+        <label>Major<input name="major" required></label>
+        <button>Create profile</button>
+      </form>
+    </section>
+    <section id="feed" hidden>
+      <h2>Campus feed</h2>
+      <form id="post-form">
+        <label>What's happening?<textarea name="text" required maxlength="5000"></textarea></label>
+        <label>Add a photo (optional, up to 5 MB)<input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+        <img id="preview" alt="Selected photo preview" hidden>
+        <button id="remove-image" type="button" hidden>Remove photo</button>
+        <button id="publish">Post</button>
+      </form>
+      <button id="refresh">Refresh feed</button>
+      <div id="posts"></div>
+    </section>
+  </main>
+</body>
+</html>

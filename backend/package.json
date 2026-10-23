@@ -12,10 +12,13 @@
     "node": ">=22"
   },
   "dependencies": {
+    "cloudinary": "^2.11.0",
     "dotenv": "^18.0.9",
     "express": "^5.1.0",
     "mongodb": "^7.7.0",
-    "mongoose": "^9.11.4"
+    "mongoose": "^9.11.4",
+    "multer": "^2.5.0",
+    "ollama": "^0.6.4"
   },
   "type": "module"
 }
