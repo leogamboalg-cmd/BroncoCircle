@@ -39,12 +39,16 @@ app.post('/api/profiles', (req, res) => {
 });
 app.patch('/api/profiles/me', (req, res) => { Object.assign(req.profile, req.body); res.json(req.profile); });
 app.get('/api/profiles', (req, res) => res.json([...profiles.values()]));
-app.get('/api/profiles/:id', (req, res) => res.json([...profiles.values()].find(profile=>profile._id === req.params.id)));
-app.put('/api/profiles/:id/friend', (req, res) => {
-  req.profile.friends = [...new Set([...req.profile.friends, req.params.id])]; res.json({ friends: req.profile.friends });
+app.get('/api/profiles/:id/social', (req,res)=>{
+  const target=[...profiles.values()].find(profile=>profile._id === req.params.id);
+  res.json({ followers:[...profiles.values()].filter(profile=>profile.friends.includes(target._id)).length, following:target.friends.length, isFollowing:req.profile.friends.includes(target._id) });
 });
-app.delete('/api/profiles/:id/friend', (req, res) => {
-  req.profile.friends = req.profile.friends.filter(id=>id !== req.params.id); res.json({ friends: req.profile.friends });
+app.get('/api/profiles/:id', (req, res) => res.json([...profiles.values()].find(profile=>profile._id === req.params.id)));
+app.put('/api/profiles/:id/follow', (req, res) => {
+  req.profile.friends = [...new Set([...req.profile.friends, req.params.id])]; res.json({ following: req.profile.friends });
+});
+app.delete('/api/profiles/:id/follow', (req, res) => {
+  req.profile.friends = req.profile.friends.filter(id=>id !== req.params.id); res.json({ following: req.profile.friends });
 });
 function details(post, viewer) {
   const allProfiles = [...profiles.values()];
@@ -59,7 +63,7 @@ app.get('/api/posts', (req, res) => res.json(posts.filter(post=>{
   if (req.query.view === 'hosting') return post.author === req.profile._id;
   if (req.query.view === 'going') return post.event.attendees.includes(req.profile._id);
   if (req.query.view === 'saved') return req.profile.savedPosts.includes(post._id);
-  if (req.query.view === 'friends') return req.profile.friends.includes(post.author);
+  if (req.query.view === 'friends' || req.query.view === 'following') return req.profile.friends.includes(post.author);
   return true;
 }).map(post=>details(post, req.profile))));
 app.post('/api/posts', (req, res) => {
@@ -192,7 +196,7 @@ try {
     await guest.waitForURL(/student=/);
     await guest.waitForFunction(()=>document.querySelector('#profile-name').textContent === 'Host');
     await guest.locator('#student-friend').click();
-    await guest.getByRole('button', { name: 'Remove from Friends' }).waitFor();
+    await guest.getByRole('button', { name: 'Unfollow', exact:true }).waitFor();
     assert.equal(await guest.locator('#edit-profile').isVisible(), false);
   });
   await check('sign out clears private data; sign in restores the account', async()=>{

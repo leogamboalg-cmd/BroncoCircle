@@ -93,7 +93,7 @@ test("website profile fields, event metadata, private saves and feed views", asy
   await request(`/profiles/${other}/friend`, "PUT");
   await request(`/profiles/${other}/friend`, "PUT");
   assert.equal(viewer.friends.length, 1);
-  await request("/posts?view=friends&category=Games&q=a%2Bb");
+  await request("/posts?view=following&category=Games&q=a%2Bb");
   assert.deepEqual(capturedFilter.author.$in.map(String), [String(other)]);
   assert.equal(capturedFilter["event.category"], "Games");
   assert.equal(capturedFilter.$or[0].text.$regex, "a\\+b");

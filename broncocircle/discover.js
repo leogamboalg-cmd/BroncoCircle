@@ -39,12 +39,15 @@ function hostAvatar(host) {
 function feedCardHTML(event) {
   const id = escapeHTML(event.id);
   const host = eventHost(event);
+  const profileLink = host._id ? `<a href="index.html?student=${encodeURIComponent(host._id)}">${escapeHTML(host.name)}</a>` : escapeHTML(host.name);
+  const following = host._id && window.LiveApp?.isFollowing(host._id);
+  const followAction = BroncoAPI.mode === 'live' && host._id && !window.LiveApp?.isSelf(host._id) ? `<button class="button button-outline follow-button" data-follow="${escapeHTML(host._id)}" aria-pressed="${Boolean(following)}" aria-label="${following?'Unfollow':'Follow'} ${escapeHTML(host.name)}">${following?'Unfollow':'Follow'}</button>` : '';
   const joined = isJoined(event), saved = state.saved.includes(event.id), remaining = spots(event);
   const expanded = expandedInvites.has(event.id), commenting = openCommentThreads.has(event.id);
   const comments = commentsFor(event.id);
   const shortDate = dateObject(event).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   return `<article class="feed-card ${expanded?'expanded':''}" aria-labelledby="feed-title-${id}">
-    <div class="feed-host">${hostAvatar(host)}<div class="feed-host-copy"><strong>${escapeHTML(host.name)}</strong> is inviting students to<small>${event.host?.friend?'In your circle':'Around campus'} · ${escapeHTML(event.category)}${event.sample ? ' · Sample plan' : ''}</small></div><button class="save-button ${saved?'saved':''}" data-save="${id}" aria-pressed="${saved}" aria-label="${saved?'Unsave':'Save'} ${escapeHTML(event.title)}">${icon('bookmark')}</button></div>
+    <div class="feed-host">${hostAvatar(host)}<div class="feed-host-copy"><strong>${profileLink}</strong> is inviting students to<small>${event.host?.friend?'In your circle':'Around campus'} · ${escapeHTML(event.category)}${event.sample ? ' · Sample plan' : ''}</small></div>${followAction}<button class="save-button ${saved?'saved':''}" data-save="${id}" aria-pressed="${saved}" aria-label="${saved?'Unsave':'Save'} ${escapeHTML(event.title)}">${icon('bookmark')}</button></div>
     <div class="feed-overview"><div class="feed-category"><span class="category-dot"></span>${escapeHTML(categoryLabels[event.category] || event.category)}</div><h2 id="feed-title-${id}"><button class="feed-title" data-expand="${id}" aria-expanded="${expanded}" aria-controls="invite-${id}" aria-label="${expanded?'Hide':'Show'} details for ${escapeHTML(event.title)}">${escapeHTML(event.title)}</button></h2><p class="feed-location">${icon('pin')}${escapeHTML(event.location)}</p></div>
     <button class="feed-image" data-expand="${id}" aria-expanded="${expanded}" aria-controls="invite-${id}" aria-label="${expanded?'Hide':'Show'} invite for ${escapeHTML(event.title)}"><img src="${escapeHTML(eventImage(event))}" alt="${escapeHTML(event.imageAlt || event.title)}" ${event.id==='bowling-night'?'fetchpriority="high"':'loading="lazy"'}><span class="image-shade"></span><span class="date-badge"><small>${month(event)}</small><strong>${day(event)}</strong></span><span class="feed-photo-hint">${expanded?'A little less':'See the plan'}${icon('chevron')}</span></button>
     <div class="feed-actions"><div class="feed-when">${icon('calendar')}<span>${shortDate}</span><span class="separator">·</span><span class="feed-time">${timeRange(event)}</span></div><div class="feed-going"><span class="attendee-count"><strong>${attendance(event)}</strong>/${capacityLabel(event)} going</span><button class="rsvp-small ${joined?'joined':!remaining?'full':''}" data-rsvp="${id}" aria-pressed="${joined}" aria-label="${joined?'Cancel RSVP for':'RSVP to'} ${escapeHTML(event.title)}" ${!joined&&!remaining?'disabled':''}>${icon(joined?'check':'plus')}${joined?'Going':remaining?'RSVP':'Full'}</button></div></div>
@@ -69,7 +72,7 @@ function renderDiscover() {
   $('#empty-state').hidden = visible.length > 0;
   $('#feed-end').hidden = !visible.length;
   $('#empty-message').textContent = search?'No events match your search. Try a different word.':currentFeedTab==='saved'?'Tap the bookmark on an event to keep it here.':'Try another hobby or make a plan of your own.';
-  $('#results-summary').textContent = `${visible.length} ${visible.length===1?'plan':'plans'}${currentFeedTab==='friends'?' from friends':currentFeedTab==='saved'?' saved for later':' around campus'}${currentFilter!=='All'?` · ${currentFilter}`:''}${search?` matching “${$('#search').value.trim()}”`:''}`;
+  $('#results-summary').textContent = `${visible.length} ${visible.length===1?'plan':'plans'}${currentFeedTab==='friends'?' from people you follow':currentFeedTab==='saved'?' saved for later':' around campus'}${currentFilter!=='All'?` · ${currentFilter}`:''}${search?` matching “${$('#search').value.trim()}”`:''}`;
   $('#discover-count').textContent = all.length;
   $('#friends-count').textContent = all.filter(event=>event.host?.friend).length;
   $('#feed-saved-count').textContent = all.filter(event=>state.saved.includes(event.id)).length;

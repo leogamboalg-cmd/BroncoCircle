@@ -28,7 +28,7 @@ async function page(fetcher, token = 'host', mode = 'live') {
   const sandbox = { document, location: { hostname: 'localhost', origin: 'http://localhost', href: 'http://localhost/discover.html', protocol: 'http:', search: '', hash: '', pathname: '/discover.html', assign: value=>{ sandbox.lastNavigation = value; }, replace: value=>{ sandbox.lastNavigation = value; } },
     history: { replaceState() {} }, AbortSignal, URLSearchParams, URL, FormData, console,
     localStorage: { getItem: ()=>null, setItem() {} }, sessionStorage: { getItem: key=>storage.get(key), setItem: (key,value)=>storage.set(key,value), removeItem: key=>storage.delete(key) },
-    fetch: fetcher, addEventListener() {}, setTimeout: ()=>0, clearTimeout() {}, CSS: { escape: value=>value } };
+    fetch: (url,options)=>String(url).endsWith('/social') ? Promise.resolve(new Response('{"followers":0,"following":0,"isFollowing":false}')) : fetcher(url,options), addEventListener() {}, setTimeout: ()=>0, clearTimeout() {}, CSS: { escape: value=>value } };
   sandbox.window = sandbox;
   const context = vm.createContext(sandbox);
   for (const script of scripts) vm.runInContext(script, context);
@@ -56,6 +56,37 @@ test('static preview shows the photo field near the top and explains that upload
   assert.match(markup, /id="event-image"[^>]*disabled/);
   assert.match(markup, /Photo uploads are unavailable in this demo/);
   assert.ok(markup.indexOf('id="event-image"') < markup.indexOf('id="event-hobby"'));
+});
+
+test('Follow and Unfollow persist across visits and control the Following feed without changing state on failure', async()=>{
+  const viewer={_id:'a'.repeat(24),name:'Alex',major:'CS',friends:[],savedPosts:[],interests:[]};
+  const other={_id:'b'.repeat(24),name:'Maya'};
+  let fail=false,followCalls=0;
+  const json=(value,status=200)=>new Response(JSON.stringify(value),{status});
+  const fetcher=async(url,options={})=>{
+    if(url==='/api/health') return json({status:'ok'});
+    if(url==='/api/auth/me') return json({account:{name:viewer.name}});
+    if(url==='/api/profiles/me') return json(viewer);
+    if(url===`/api/profiles/${other._id}/follow`) {
+      followCalls++; if(fail) return json({error:'Could not follow'},503);
+      viewer.friends=options.method==='PUT'?[other._id]:[]; return json({following:viewer.friends});
+    }
+    if(url.startsWith('/api/posts?')) return json([{_id:'c'.repeat(24),author:other,text:'Come play',comments:[],isFriend:viewer.friends.includes(other._id),event:{title:'Maya’s games',category:'Games',location:'BSC',dateTime:'2030-11-10T16:00:00-08:00',endTime:'2030-11-10T18:00:00-08:00',capacity:8,attendees:[]}}]);
+    throw new Error(`Unexpected request ${url}`);
+  };
+  const first=await page(fetcher);
+  assert.match(first.get('#campus-feed').innerHTML,/aria-label="Follow Maya"/);
+  assert.match(first.get('#campus-feed').innerHTML,/index.html\?student=bbbb/);
+  vm.runInContext("selectFeedTab('friends')",first.context);
+  assert.equal(first.get('#campus-feed').innerHTML,'');
+  fail=true; await first.live.toggleFollow(other._id);
+  assert.equal(first.live.isFollowing(other._id),false); assert.equal(viewer.friends.length,0);
+  fail=false; await first.live.toggleFollow(other._id);
+  assert.equal(first.live.isFollowing(other._id),true);
+  assert.match(first.get('#campus-feed').innerHTML,/aria-label="Unfollow Maya"/);
+  const second=await page(fetcher); assert.equal(second.live.isFollowing(other._id),true);
+  await second.live.toggleFollow(other._id); assert.equal(second.live.isFollowing(other._id),false);
+  const before=followCalls; await second.live.toggleFollow(viewer._id); assert.equal(followCalls,before);
 });
 
 test('personal profile photos preview, upload, retry safely, persist per user, and can be removed', async()=>{

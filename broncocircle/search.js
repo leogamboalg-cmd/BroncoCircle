@@ -133,7 +133,7 @@ function createCampusSearch({
     let visible;
 
     if (mode === 'friends') {
-      visible = people.filter(person => shared(person).length > 0 &&
+      visible = people.filter(person => (BroncoAPI.mode === 'live' || shared(person).length > 0) &&
         matches(`${person.name} ${person.handle} ${hobbies(person).join(' ')}`))
         .sort((a,b) => shared(b).length - shared(a).length || a.name.localeCompare(b.name));
 
@@ -260,7 +260,7 @@ if (document.getElementById('campus-search')) {
     try {
       const [me, people, posts] = await Promise.all([BroncoAPI.request('/profiles/me'), BroncoAPI.request('/profiles'), BroncoAPI.request('/posts?view=discover')]);
       shared.hobbies = me.interests || [];
-      shared.profiles = people.map(person=>({ ...person, id: person._id, handle: person.handle || person.name, hobbies: person.interests || [], initials: person.name.split(/\s+/).map(word=>word[0]).slice(0,2).join(''), isFriend: (me.friends || []).includes(person._id) }));
+      shared.profiles = people.filter(person=>person._id !== me._id).map(person=>({ ...person, id: person._id, handle: person.handle || person.name, hobbies: person.interests || [], initials: person.name.split(/\s+/).map(word=>word[0]).slice(0,2).join(''), isFriend: (me.friends || []).includes(person._id) }));
       shared.events = posts.filter(post=>post.event).map(post=>{
         const start = BroncoAPI.localParts(post.event.dateTime);
         const end = BroncoAPI.localParts(post.event.endTime || post.event.dateTime);

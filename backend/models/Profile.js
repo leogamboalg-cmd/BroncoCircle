@@ -21,6 +21,7 @@ const profileSchema = new Schema({
   bio: { type: String, trim: true, maxlength: 180, default: "" },
   pronouns: { type: String, trim: true, maxlength: 50, default: "" },
   savedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
+  // Legacy field name retained for existing data: this is a one-way following list.
   friends: [{ type: Schema.Types.ObjectId, ref: "Profile" }],
   major: { type: String, required: true, trim: true },
   interests: [{ type: String, trim: true, required: true }],
@@ -29,4 +30,5 @@ const profileSchema = new Schema({
 
 // Keep unlinked seed profiles while enforcing one profile per account.
 profileSchema.index({ account: 1 }, { unique: true, partialFilterExpression: { account: { $type: "objectId" } } });
+profileSchema.index({ friends: 1 });
 export default modelConnection.model("Profile", profileSchema, "profiles");
