@@ -9,6 +9,7 @@
 .campus-search-row:last-child{border-bottom:0}.campus-search-row:hover{background:#f6f8f0}
 .campus-search-row:focus-visible,.campus-search-tabs button:focus-visible{outline:2px solid var(--gold,#e5bb42);outline-offset:-4px}
 .campus-search-avatar{display:grid;place-items:center;flex-shrink:0;width:54px;height:54px;border-radius:50%;background:#e5eddc;color:#617b4e;font-weight:600}
+.campus-search-avatar img{min-height:0}
 .campus-search-row[data-friend=true] .campus-search-avatar{background:#f3e9c9;color:#8d7739}
 .campus-search-copy{display:grid;gap:7px;min-width:0}.campus-search-name{font-weight:650;font-size:15px;overflow-wrap:anywhere}
 .campus-search-hobbies{display:flex;gap:5px;flex-wrap:wrap}.campus-search-hobby{padding:3px 8px;border:1px solid #e3e8d8;border-radius:20px;background:#f3f6eb;color:#7a8a6b;font-size:10px}
