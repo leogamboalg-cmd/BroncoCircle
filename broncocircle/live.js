@@ -376,7 +376,8 @@
     setBusy(form,true); results.replaceChildren(); message.textContent='Finding plans for you…';
     try {
       const response=await api.request('/ai/recommend-events',{method:'POST',body:{query,events:eventsForAI},timeoutMs:40000});
-      message.textContent=response.mode==='keywords'?'AI is unavailable right now. Here are keyword matches:':response.recommendations.length?'Plans picked for you:':'No matching upcoming plans with open spots. Try another request or create one!';
+      const aiProblems={relay_configuration:'The AI connection is not configured on the server.',relay_key:'The AI connection key does not match.',relay_unreachable:'The laptop AI tunnel is offline.',relay_unavailable:'The laptop AI service is unavailable.',ai_busy:'AI is helping someone else. Try again shortly.',invalid_ai_response:'AI returned an unreadable response. Please try again.'};
+      message.textContent=response.mode==='keywords'?`${aiProblems[response.fallbackReason] || 'AI is unavailable right now.'} Showing keyword matches instead.`:response.recommendations.length?'Plans picked for you:':'No matching upcoming plans with open spots. Try another request or create one!';
       for(const pick of response.recommendations) {
         const plan=getEvent(pick.id); if(!plan) continue;
         const card=document.createElement('div'); card.className='plan-pick';

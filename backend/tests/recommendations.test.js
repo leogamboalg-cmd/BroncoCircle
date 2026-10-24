@@ -10,3 +10,7 @@ test('AI failure offers labeled keyword matches and never claims AI success',asy
   const response=await recommendEvents('games',events,async()=>{throw new Error('offline');},Date.parse('2026-10-23'));
   assert.equal(response.mode,'keywords');assert.equal(response.recommendations.length,1);assert.equal(response.recommendations[0].id,'games');
 });
+test('relay failures expose only a safe diagnostic code, never the private key',async()=>{
+  const response=await recommendEvents('games',events,async()=>{throw Object.assign(new Error('secret-key-value'),{code:'relay_key'});},Date.parse('2026-10-23'));
+  assert.equal(response.fallbackReason,'relay_key');assert.doesNotMatch(JSON.stringify(response),/secret-key-value/);
+});

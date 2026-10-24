@@ -1,6 +1,10 @@
 import { askAI } from "../services/aiService.js";
 import { recommendEvents } from '../services/eventRecommendations.js';
 
+export function getAIStatus(req,res) {
+  return res.json({relayUrlConfigured:Boolean(process.env.AI_RELAY_URL),relayKeyConfigured:Boolean(process.env.AI_RELAY_TOKEN)});
+}
+
 export async function findPlans(req,res) {
   const query=req.body?.query, events=req.body?.events;
   if(typeof query!=='string' || !query.trim() || query.length>500 || !Array.isArray(events) || events.length>50) {

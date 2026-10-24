@@ -17,10 +17,12 @@ export async function recommendEvents(query, input, generate, now = Date.now()) 
     const recommendations=parsed.recommendations.filter(item=>item && known.has(item.id) && !seen.has(item.id) && typeof item.reason==='string' && (seen.add(item.id),true))
       .slice(0,3).map(item=>({id:item.id,reason:item.reason.slice(0,240)}));
     return {mode:'ai',recommendations};
-  } catch {
+  } catch(error) {
     const words=query.toLowerCase().match(/[a-z0-9]+/g)||[];
     const ranked=events.map(event=>({event,score:words.filter(word=>word.length>2 && `${event.title} ${event.category} ${event.description} ${event.location}`.toLowerCase().includes(word)).length}))
       .filter(item=>item.score>0).sort((a,b)=>b.score-a.score || Date.parse(a.event.start)-Date.parse(b.event.start)).slice(0,3);
-    return {mode:'keywords',recommendations:ranked.map(({event})=>({id:event.id,reason:'Matches words in your request. Check the time and remaining spots.'}))};
+    const safeCodes=['relay_configuration','relay_unreachable','relay_key','ai_busy','relay_unavailable'];
+    const fallbackReason=safeCodes.includes(error.code)?error.code:error instanceof SyntaxError?'invalid_ai_response':'ai_unavailable';
+    return {mode:'keywords',fallbackReason,recommendations:ranked.map(({event})=>({id:event.id,reason:'Matches words in your request. Check the time and remaining spots.'}))};
   } finally {clearTimeout(timer);}
 }
