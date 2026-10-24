@@ -1,6 +1,10 @@
 import ollama from "ollama";
 
 const MODEL = "llama3.2:1b";
+const recommendationsFormat = {
+  type:'object', additionalProperties:false, required:['recommendations'],
+  properties:{recommendations:{type:'array',maxItems:3,items:{type:'object',additionalProperties:false,required:['id','reason'],properties:{id:{type:'string'},reason:{type:'string',maxLength:160}}}}}
+};
 
 export async function askAI(prompt, { json = false, localOnly = false } = {}) {
   if (typeof prompt !== "string" || !prompt.trim()) {
@@ -24,13 +28,25 @@ export async function askAI(prompt, { json = false, localOnly = false } = {}) {
 
   if(!localOnly && process.env.NODE_ENV==='production') throw Object.assign(new Error('Render needs AI_RELAY_URL and AI_RELAY_TOKEN.'),{code:'relay_configuration'});
 
+  let format = 'json';
+  if(json && prompt.startsWith('Recommend up to 3 campus events')) {
+    format = recommendationsFormat;
+    try {
+      const catalog=JSON.parse(prompt.slice(prompt.indexOf('\n')+1));
+      const ids=catalog.events.map(event=>event.id).filter(id=>typeof id==='string');
+      if(ids.length) format={...recommendationsFormat,properties:{recommendations:{...recommendationsFormat.properties.recommendations,items:{...recommendationsFormat.properties.recommendations.items,properties:{...recommendationsFormat.properties.recommendations.items.properties,id:{type:'string',enum:ids}}}}}};
+    } catch { /* The fixed schema still protects callers without a catalog. */ }
+  }
   const result = await ollama.chat({
     model: MODEL,
-    messages: [{ role: "user", content: prompt.trim() }],
-    ...(json ? {format:'json'} : {}),
+    messages: [
+      ...(json && prompt.startsWith('Recommend up to 3 campus events') ? [{role:'system',content:'Match the requested activity strictly. Recommend only events relevant to the user, never unrelated events to fill the list. Use only facts in the supplied event catalog in your reasons. A soccer request should select soccer, not coffee. Each ID may appear once.'}] : []),
+      { role: "user", content: prompt.trim() }
+    ],
+    ...(json ? {format} : {}),
     options: {
       temperature: json ? 0.2 : 0.7,
-      num_predict: 300,
+      num_predict: 600,
     },
   });
 

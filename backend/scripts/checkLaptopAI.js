@@ -10,7 +10,7 @@ if(process.argv.includes('--recommend')) {
   const result=await recommendEvents('I like soccer',[
     {id:'soccer',title:'Indoor Soccer',category:'Sports',location:'BRIC',description:'A small soccer game.',start:'2030-11-01T18:00:00-08:00',spots:5},
     {id:'coffee',title:'Coffee catch-up',category:'Coffee',location:'BSC',description:'Meet for coffee.',start:'2030-11-01T18:00:00-08:00',spots:3}
-  ],prompt=>askAI(prompt,{json:true}));
+  ],async prompt=>{const answer=await askAI(prompt,{json:true});if(process.argv.includes('--raw')) console.log('Model JSON:',answer);return answer;});
   console.log(JSON.stringify(result));
   process.exitCode=result.mode==='ai'?0:1;
 } else {
