@@ -23,19 +23,22 @@ before creating the service. No database is provisioned by this file.
 
 ## Keep the current GitHub Pages link
 
-1. In GitHub repository Settings → Secrets and variables → Actions → Variables,
-   create a repository variable `LIVE_APP_URL` with the deployed HTTPS origin
-   (for example, `https://your-service.onrender.com`, with no path).
+1. The workflow now defaults to the supplied app URL,
+   `https://broncocircle-1.onrender.com`. To change it, set the repository
+   variable `LIVE_APP_URL` in Settings → Secrets and variables → Actions → Variables.
 2. Run the **Deploy BroncoCircle to GitHub Pages** workflow from Actions, or
    push a website change. Pages Source should remain **GitHub Actions**.
 3. Existing Pages links then forward to the connected app, preserving the
    selected page, query string, and event fragment. Tokens are not forwarded;
    users sign in on the live app's origin.
 
-Without `LIVE_APP_URL`, the workflow publishes the latest static preview and
-the teammate's login files. Login needs the running backend to authenticate.
+Before publishing, the workflow checks the Render health endpoint, teammate
+login, and Discover page. A failed check prevents publishing a broken redirect.
+The build script can also produce a static preview with no live app URL.
+Login needs the running backend to authenticate.
 `deployment.json` on Pages identifies the deployed commit and live target.
-Removing the variable and rerunning the workflow restores static preview mode.
+To restore static preview mode, remove the workflow's default live URL and
+unset the repository variable, then rerun the workflow.
 
 ## Local checks
 

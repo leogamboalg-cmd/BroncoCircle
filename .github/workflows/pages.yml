@@ -7,6 +7,7 @@ on:
       - 'broncocircle/**'
       - 'frontend/login/**'
       - 'scripts/build-pages.mjs'
+      - 'scripts/verify-live-app.mjs'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -25,6 +26,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      LIVE_APP_URL: ${{ vars.LIVE_APP_URL || 'https://broncocircle-1.onrender.com' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -45,9 +48,9 @@ jobs:
           node-version: '22'
       - name: Prepare website and teammate login
         id: site
-        env:
-          LIVE_APP_URL: ${{ vars.LIVE_APP_URL }}
-        run: node scripts/build-pages.mjs
+        run: |
+          node scripts/verify-live-app.mjs
+          node scripts/build-pages.mjs
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:

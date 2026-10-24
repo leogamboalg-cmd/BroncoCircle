@@ -4,6 +4,19 @@ import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import vm from 'node:vm';
 import { buildPages } from '../../scripts/build-pages.mjs';
+import { verifyLiveApp } from '../../scripts/verify-live-app.mjs';
+
+test('deployment checks require the real API and teammate login before publishing a redirect', async()=>{
+  const paths = [];
+  await verifyLiveApp('https://broncocircle-1.onrender.com', async url=>{
+    paths.push(url.pathname);
+    const bodies = { '/api/health': '{"status":"ok"}', '/login/': '<button id="choose-login">Log in</button>', '/discover.html': '<script src="live.js"></script>' };
+    return new Response(bodies[url.pathname]);
+  });
+  assert.deepEqual(paths, ['/api/health','/login/','/discover.html']);
+  await assert.rejects(verifyLiveApp('https://broncocircle-1.onrender.com', async()=>new Response('Not found',{ status:404 })), /HTTP 404/);
+  await assert.rejects(verifyLiveApp('https://broncocircle-1.onrender.com', async url=>new Response(url.pathname === '/api/health' ? '{"status":"ok"}' : '<h1>Old website</h1>')), /not the expected/);
+});
 
 test('Pages artifact includes the actual website, login and correct image assets without backend secrets', async()=>{
   const directory = await buildPages({ commit: 'test-sha' });
