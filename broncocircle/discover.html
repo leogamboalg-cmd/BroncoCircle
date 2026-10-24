@@ -60,6 +60,12 @@
       <a class="button button-outline" href="index.html">My profile<svg class="icon"><use href="#i-arrow"/></svg></a>
     </section>
 
+    <section class="plan-finder" aria-labelledby="plan-finder-title">
+      <h2 id="plan-finder-title">Find my next plan ✨</h2>
+      <p>Tell us what you’re into and when you’re free.</p>
+      <form id="plan-finder-form"><label class="sr-only" for="plan-request">What would you like to do?</label><input id="plan-request" name="query" maxlength="500" required placeholder="Games Friday after 3, with a small group…"><button class="button button-green" type="submit">Find plans</button></form>
+      <p id="plan-finder-status" role="status" aria-live="polite"></p><div id="plan-finder-results"></div>
+    </section>
     <div class="profile-tabs discover-tabs">
       <div class="feed-tab-list" role="tablist" aria-label="Campus feed">
         <button role="tab" aria-selected="true" aria-controls="feed-panel" id="feed-tab-discover" class="tab active" data-feed-tab="discover"><svg class="icon"><use href="#i-compass"/></svg>Discover<span class="tab-count" id="discover-count">6</span></button>
