@@ -13,6 +13,8 @@
   const pending = new Set();
   const eventImages = new WeakMap();
   let disposeEventImage = () => {};
+  const profileImages = new WeakMap();
+  let disposeProfileImage = () => {};
   const sessionBar = document.createElement('section');
   sessionBar.className = 'session-bar';
   sessionBar.setAttribute('aria-label', 'Account');
@@ -57,9 +59,9 @@
       capacity: post.event.capacity ?? Infinity, count: post.attendeeCount ?? post.event.attendees?.length ?? 0,
       image: post.event.image || categoryImage[category] || 'coffee', imageUrl: post.imageUrl,
       imageAlt: post.event.imageAlt, cost: post.event.cost || 'Check with the host', authorId: author._id || author,
-      host: { name: author.name || 'Student', initials: (author.name || 'Student').split(/\s+/).map(word=>word[0]).slice(0,2).join(''), friend: Boolean(post.isFriend), image: undefined },
+      host: { _id: author._id, name: author.name || 'Student', avatarUrl: author.avatarUrl, initials: (author.name || 'Student').split(/\s+/).map(word=>word[0]).slice(0,2).join(''), friend: Boolean(post.isFriend), image: undefined },
       attendees: post.event.attendees || [], joined: Boolean(post.isGoing), saved: Boolean(post.isSaved),
-      comments: (post.comments || []).map(comment => ({ name: comment.author?.name || 'Student', initials: (comment.author?.name || 'Student').split(/\s+/).map(word=>word[0]).slice(0,2).join(''), text: comment.text }))
+      comments: (post.comments || []).map(comment => ({ _id: comment.author?._id, name: comment.author?.name || 'Student', avatarUrl: comment.author?.avatarUrl, initials: (comment.author?.name || 'Student').split(/\s+/).map(word=>word[0]).slice(0,2).join(''), text: comment.text }))
     };
   }
   function synchronize() {
@@ -153,19 +155,68 @@
     const current = profile || { name: accountName, handle: '', bio: '', major: '', pronouns: '', interests: [] };
     const input = (name, label, max, required = false) => `<div class="form-field"><label for="edit-${name}">${label}</label><input id="edit-${name}" name="${name}" value="${escapeHTML(current[name] || '')}" maxlength="${max}" ${required?'required':''} ${name==='handle'?'pattern="[A-Za-z0-9_.]+"':''}></div>`;
     showForm(`<div class="eyebrow">A LITTLE ABOUT YOU</div><h2 id="form-title">${profile?'Edit your profile':'Create your profile'}.</h2><form id="profile-form">${input('name','Name',100,true)}${input('handle','Username',30,true)}${input('major','Major',100,true)}${input('pronouns','Pronouns (optional)',50)}<div class="form-field"><label for="edit-bio">Your bio</label><textarea id="edit-bio" name="bio" maxlength="180">${escapeHTML(current.bio || '')}</textarea></div><fieldset class="interest-options"><legend>Your hobbies</legend>${categories.map(category=>`<label><input type="checkbox" name="interests" value="${category}" ${(current.interests || []).includes(category)?'checked':''}> ${category}</label>`).join('')}</fieldset><p class="form-error" id="form-error" role="alert" hidden></p><button class="button button-green" type="submit">Save profile</button></form>`);
-    $('#profile-form').addEventListener('submit', async event => {
+    const profileForm = $('#profile-form');
+    const photoField = document.createElement('div');
+    photoField.className = 'form-field';
+    photoField.innerHTML = `<label for="profile-image">Profile photo</label><img id="profile-image-preview" class="profile-image-preview" src="${escapeHTML(avatarImage(current))}" alt="Your profile photo preview"><input id="profile-image" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="profile-image-help"><small id="profile-image-help">Choose a JPEG, PNG, or WebP up to 5 MB.</small><button id="profile-image-remove" type="button" class="button button-outline" ${current.avatarUrl?'':'hidden'}>Remove photo</button><p id="profile-image-status" role="status" aria-live="polite"></p>`;
+    profileForm.prepend(photoField);
+    setupProfileImage(profileForm, current);
+    profileForm.addEventListener('submit', async event => {
       event.preventDefault(); const form = event.currentTarget;
       if (form.dataset.busy) return;
       const values = new FormData(form); const body = Object.fromEntries(values);
       body.interests = values.getAll('interests');
-      setBusy(form, true);
-      try {
-        profile = await api.request(profile ? '/profiles/me' : '/profiles', { method: profile ? 'PATCH' : 'POST', body });
-        state.profile = profile; viewedProfile = null;
-        $('#form-dialog').close(); await refresh(); notify('Profile saved.');
-      } catch (error) { if ($('#form-dialog').open) formError(error.message); failure(error); }
-      finally { setBusy(form, false); }
+      await saveProfile(body, form);
     });
+  }
+  function setupProfileImage(form, current = profile || {}) {
+    disposeProfileImage();
+    const input = $('#profile-image', form), preview = $('#profile-image-preview', form);
+    const remove = $('#profile-image-remove', form), message = $('#profile-image-status', form);
+    const draft = { file:null, previewUrl:'', uploadedUrl:'', removed:false };
+    profileImages.set(form, draft);
+    function revoke() { if (draft.previewUrl) URL.revokeObjectURL(draft.previewUrl); draft.previewUrl = ''; }
+    input.addEventListener('change', () => {
+      const file = input.files[0];
+      if (!file) return;
+      if (!['image/jpeg','image/png','image/webp'].includes(file.type) || !file.size || file.size > 5 * 1024 * 1024) {
+        input.value = ''; message.textContent = 'Choose a nonempty JPEG, PNG, or WebP image up to 5 MB.'; return;
+      }
+      revoke(); draft.file = file; draft.uploadedUrl = ''; draft.removed = false;
+      draft.previewUrl = URL.createObjectURL(file); preview.src = draft.previewUrl; remove.hidden = false;
+      message.textContent = 'Photo ready. Save your profile to upload it.';
+    });
+    remove.addEventListener('click', () => {
+      revoke(); input.value = ''; draft.file = null; draft.uploadedUrl = ''; draft.removed = true;
+      preview.src = avatarImage({ ...current, avatarUrl:null }); remove.hidden = true;
+      message.textContent = 'Save your profile to remove the photo.';
+    });
+    const dialog = $('#form-dialog');
+    const closed = () => { if (!dialog.open) dispose(); };
+    function dispose() { revoke(); profileImages.delete(form); dialog.removeEventListener('close',closed); }
+    disposeProfileImage = dispose; dialog.addEventListener('close',closed);
+  }
+  async function saveProfile(body, form) {
+    if (form.dataset.busy) return;
+    setBusy(form, true);
+    const photo = profileImages.get(form);
+    try {
+      // Uploads require a linked profile. Create it first for new accounts,
+      // then reuse that profile if uploading fails and the user retries.
+      if (!profile && photo?.file) { profile = await api.request('/profiles', { method:'POST', body }); state.profile = profile; }
+      if (photo?.file && !photo.uploadedUrl) {
+        $('#profile-image-status',form).textContent = 'Uploading your profile photo…';
+        const upload = new FormData(); upload.append('image',photo.file);
+        photo.uploadedUrl = (await api.request('/uploads/image',{ method:'POST', body:upload, timeoutMs:45000 })).imageUrl;
+      }
+      const avatar = photo?.removed ? { avatarUrl:null } : photo?.uploadedUrl ? { avatarUrl:photo.uploadedUrl } : {};
+      profile = await api.request(profile ? '/profiles/me' : '/profiles', { method:profile?'PATCH':'POST', body:{ ...body, ...avatar } });
+      state.profile = profile; viewedProfile = null;
+      $('#form-dialog').close(); await refresh(); notify('Profile saved.');
+    } catch (error) {
+      if (photo?.file) $('#profile-image-status',form).textContent = photo.uploadedUrl ? 'Photo uploaded. Try saving your profile again.' : 'Your photo is still selected. Try saving again.';
+      if ($('#form-dialog').open) formError(error.message); failure(error);
+    } finally { setBusy(form,false); }
   }
   async function createEvent(data, form) {
     if (form.dataset.busy || !ensureProfile()) return;
@@ -243,6 +294,8 @@
     finally { setBusy(form, false); }
   }
   function applyLiveProfile() {
+    const navigationAvatar = $('.nav-profile');
+    if (navigationAvatar) navigationAvatar.style.backgroundImage = `url("${avatarImage(profile || state.profile)}")`;
     if (isDiscoverPage) { document.title = 'Discover · BroncoCircle'; return; }
     const shown = viewedProfile || profile || state.profile;
     $('#profile-name').textContent = shown.name || 'Your profile';
@@ -250,7 +303,7 @@
     $('#profile-bio').textContent = shown.bio || '';
     $('.profile-hobbies').innerHTML = (shown.interests || []).map(hobby=>`<span class="live-hobby">${escapeHTML(hobby)}</span>`).join('');
     $('.profile-hobbies').setAttribute('aria-label', 'Hobbies');
-    $('.profile-portrait img').src = shown.avatarUrl || imageSrc('avatar');
+    $('.profile-portrait img').src = avatarImage(shown);
     $('.profile-portrait img').alt = shown.name || 'Your profile';
     $('.online-dot').hidden = true;
     $('#edit-profile').hidden = !ownPage();
@@ -259,7 +312,7 @@
     document.title = `${shown.name || 'Your profile'} · BroncoCircle`;
   }
   window.LiveApp = { get events() { return profile ? [...records, ...samplePlans] : []; }, isHosted: event=>event.authorId === (viewedProfile || profile)?._id,
-    ensureProfile, applyProfile: applyLiveProfile, showProfileForm, createEvent, setupEventImage,
+    ensureProfile, applyProfile: applyLiveProfile, showProfileForm, saveProfile, setupProfileImage, createEvent, setupEventImage,
     toggleSave: id=>changeEvent(id,'save'), toggleRSVP: id=>changeEvent(id,'rsvp'), refreshDetail, addComment };
   $('#session-login').onclick = showAuth;
   $('#session-logout').onclick = resetSession;

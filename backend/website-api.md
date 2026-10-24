@@ -36,6 +36,16 @@ does not collect. Handles accept letters, numbers, underscores, and periods
 profiles). `GET /api/profiles/:id` loads another student's profile. Public list
 and detail responses omit account IDs, saved events, and friend lists.
 
+The profile editor includes a profile photo picker, circular preview, and
+Remove photo control. It uses the existing image upload endpoint and saves
+the returned URL as `avatarUrl` on the logged-in user's profile. JPEG/PNG/WebP
+up to 5 MB are supported. Failed uploads preserve the draft; a successful
+upload is reused when retrying a failed profile save. New accounts create
+their linked profile before uploading. Removing a photo sends `avatarUrl:null`;
+it does not delete the old Cloudinary asset. Other users' photos are unchanged.
+Profiles without photos display their own initials. Real event hosts,
+comments, attendees, navigation, and student search use each profile's photo.
+
 `PUT /api/profiles/:id/friend` adds a profile to your private Friends feed list;
 `DELETE` removes it. This is a one-way list, not mutual friendship or a friend
 request system. Both operations are idempotent. Lists cannot be overwritten

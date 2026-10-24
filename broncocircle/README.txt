@@ -8,6 +8,9 @@ saved plans, comments, and profile edits use your account on the backend.
 The event form accepts an optional JPEG, PNG, or WebP photo up to 5 MB with
 preview/removal. Configure Cloudinary in backend/.env to enable uploads.
 Photos are stored in Cloudinary; the event stores the returned image URL.
+Use Edit profile to choose your own profile photo, preview it, or remove it.
+Save profile stores the photo URL on your account's profile. Without a photo,
+the live app shows your initials instead of a shared default portrait.
 Use Refresh or return to the browser tab to get other users' latest updates.
 Times are Pacific regardless of the device's timezone. The Find students &
 events link uses real API records and opens student profiles and shared plans.

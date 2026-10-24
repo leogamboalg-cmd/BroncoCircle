@@ -107,12 +107,17 @@ function createCampusSearch({
     return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
   }
 
-  function row(title, avatar, callback) {
+  function row(title, avatar, callback, avatarUrl) {
     const button = node('button', 'campus-search-row');
     button.type = 'button';
     const copy = node('span', 'campus-search-copy');
     copy.append(node('span', 'campus-search-name', title));
-    button.append(node('span', 'campus-search-avatar', avatar), copy);
+    const portrait = node('span', 'campus-search-avatar', avatar);
+    if (avatarUrl) {
+      const image = document.createElement('img'); image.src = avatarUrl; image.alt = ''; image.loading = 'lazy';
+      portrait.replaceChildren(image);
+    }
+    button.append(portrait, copy);
     button.addEventListener('click', callback, { signal });
     return { button, copy };
   }
@@ -134,7 +139,7 @@ function createCampusSearch({
 
       visible.forEach(person => {
         const { button, copy } = row(`@${String(person.handle).replace(/^@/, '')}`,
-          initials(person.name), () => onProfileSelect(person));
+          initials(person.name), () => onProfileSelect(person), person.avatarUrl);
         const tags = node('span', 'campus-search-hobbies');
         shared(person).forEach(hobby => tags.append(node('span', 'campus-search-hobby', hobby)));
         copy.append(tags);

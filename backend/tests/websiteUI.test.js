@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises';
 const scripts = await Promise.all(['api.js', 'app.js', 'discover.js', 'live.js'].map(name=>readFile(new URL(`../../broncocircle/${name}`, import.meta.url), 'utf8')));
 function element() {
   const attributes = new Map(), listeners = new Map();
-  return { value: '', dataset: {}, textContent: '', innerHTML: '', hidden: false, open: false, tagName: 'DIV',
+  return { value: '', dataset: {}, style: {}, textContent: '', innerHTML: '', hidden: false, open: false, tagName: 'DIV',
     classList: { add() {}, remove() {}, toggle() {} },
     setAttribute: (key,value)=>attributes.set(key,value), getAttribute: key=>attributes.get(key), hasAttribute: key=>attributes.has(key), removeAttribute: key=>attributes.delete(key),
     addEventListener(name, callback) { listeners.set(name, callback); }, listeners,
@@ -56,6 +56,57 @@ test('static preview shows the photo field near the top and explains that upload
   assert.match(markup, /id="event-image"[^>]*disabled/);
   assert.match(markup, /Photo uploads are unavailable in this demo/);
   assert.ok(markup.indexOf('id="event-image"') < markup.indexOf('id="event-hobby"'));
+});
+
+test('personal profile photos preview, upload, retry safely, persist per user, and can be removed', async()=>{
+  const current = { _id:'a'.repeat(24), name:'Alex Rivera', handle:'alex', major:'CS', interests:[], savedPosts:[], friends:[], avatarUrl:'https://res.cloudinary.com/test/image/upload/old.png' };
+  const another = { _id:'b'.repeat(24), name:'Maya Chen', avatarUrl:'https://res.cloudinary.com/test/image/upload/maya.png' };
+  const newUrl = 'https://res.cloudinary.com/test/image/upload/alex.png';
+  let uploadCalls=0, patchCalls=0, failUpload=true, failSave=false;
+  const json = (value,status=200)=>new Response(JSON.stringify(value),{status});
+  const entry = await page(async(url,options={})=>{
+    if (url === '/api/health') return json({status:'ok'});
+    if (url === '/api/auth/me') return json({account:{name:current.name}});
+    if (url === '/api/profiles/me') {
+      if (options.method === 'PATCH') {
+        patchCalls++; if(failSave) return json({error:'Save failed'},503);
+        Object.assign(current,JSON.parse(options.body));
+      }
+      return json(current);
+    }
+    if (url === '/api/uploads/image') {
+      uploadCalls++; assert.equal(options.body.get('image').name,'pfp.png');
+      return failUpload ? json({error:'Upload failed'},502) : json({imageUrl:newUrl},201);
+    }
+    if (url.startsWith('/api/posts?')) return json([]);
+    throw new Error(`Unexpected request ${url}`);
+  });
+  const form=element(); form.querySelector=selector=>entry.get(selector);
+  entry.get('#form-dialog').open=true;
+  entry.live.setupProfileImage(form);
+  const picker=entry.get('#profile-image');
+  picker.files=[new File(['fake'],'bad.svg',{type:'image/svg+xml'})]; picker.listeners.get('change')();
+  assert.match(entry.get('#profile-image-status').textContent,/JPEG/);
+  picker.files=[new File(['photo'],'pfp.png',{type:'image/png'})]; picker.listeners.get('change')();
+  assert.match(entry.get('#profile-image-preview').src,/^blob:/);
+  const fields={name:current.name,handle:'alex',major:'CS',interests:[]};
+  await entry.live.saveProfile(fields,form);
+  assert.equal(patchCalls,0); assert.equal(entry.get('#form-dialog').open,true);
+  assert.equal(current.avatarUrl,'https://res.cloudinary.com/test/image/upload/old.png');
+  failUpload=false; failSave=true; await entry.live.saveProfile(fields,form);
+  failSave=false; await entry.live.saveProfile(fields,form);
+  assert.equal(uploadCalls,2,'retry must reuse the successful upload');
+  assert.equal(current.avatarUrl,newUrl);
+  assert.equal(another.avatarUrl,'https://res.cloudinary.com/test/image/upload/maya.png');
+  assert.match(entry.get('.nav-profile').style.backgroundImage,/alex.png/);
+  assert.equal(vm.runInContext('state.profile.avatarUrl',entry.context),newUrl);
+  entry.live.setupProfileImage(form);
+  entry.get('#profile-image-remove').listeners.get('click')();
+  assert.match(entry.get('#profile-image-preview').src,/^data:image\/svg\+xml,/);
+  await entry.live.saveProfile(fields,form);
+  assert.equal(current.avatarUrl,null); assert.equal(uploadCalls,2);
+  assert.match(entry.get('.nav-profile').style.backgroundImage,/data:image\/svg\+xml/);
+  assert.notEqual(vm.runInContext("avatarImage({name:'Alex Rivera'})",entry.context), vm.runInContext("avatarImage({name:'Maya Chen'})",entry.context));
 });
 
 test('actual website scripts create shared events, save, RSVP, comment, and clear state on logout', async()=>{

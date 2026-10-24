@@ -65,6 +65,15 @@ const isJoined = event => state.joined.includes(event.id);
 const attendance = event => event.count + (BroncoAPI.mode === 'demo' && isJoined(event) ? 1 : 0);
 const eventImage = event => event.imageUrl || imageSrc(event.image);
 const capacityLabel = event => event.capacity === Infinity ? '∞' : event.capacity;
+function avatarImage(person = {}) {
+  if (person.avatarUrl) return person.avatarUrl;
+  const name = person.name || 'Student';
+  const initials = name.trim().split(/\s+/).slice(0,2).map(part=>Array.from(part)[0] || '').join('').toUpperCase();
+  const colors = ['#174c38', '#5d4777', '#765429', '#315e80', '#7c4656'];
+  const shade = Array.from(String(person._id || name)).reduce((sum,char)=>sum + char.codePointAt(0),0) % colors.length;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><rect width="160" height="160" rx="80" fill="${colors[shade]}"/><text x="80" y="84" dy=".3em" text-anchor="middle" font-family="Arial,sans-serif" font-size="54" fill="white">${escapeHTML(initials)}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
 const spots = event => Math.max(0,event.capacity - attendance(event));
 const dateObject = event => new Date(`${event.date}T12:00:00`);
 const longDate = event => dateObject(event).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
@@ -101,7 +110,7 @@ function applyProfile() {
   $$('.profile-portrait>img').forEach(img => img.alt = name);
 }
 function avatarStack(event) {
-  if (BroncoAPI.mode !== 'demo') return (event?.attendees || []).slice(0,3).map(person => `<span class="mini-avatar" aria-hidden="true">${escapeHTML((person.name || 'Student').split(/\s+/).map(word=>word[0]).slice(0,2).join(''))}</span>`).join('');
+  if (BroncoAPI.mode !== 'demo') return (event?.attendees || []).slice(0,3).map(person => `<img class="mini-avatar" src="${escapeHTML(avatarImage(person))}" alt="">`).join('');
   return '<span class="avatar-stack" aria-hidden="true"><img class="mini-avatar" src="assets/friend.jpg" alt=""><span class="mini-avatar avatar-b">AL</span><span class="mini-avatar avatar-c">MK</span></span>';
 }
 function cardHTML(event,index) {
@@ -191,7 +200,7 @@ function renderDetail(event) {
   $('#event-detail').innerHTML = `<div class="event-detail-layout">
     <button class="dialog-close icon-button" data-close="event-dialog" aria-label="Close event details">${icon('close')}</button>
     <div class="detail-photo"><img src="${escapeHTML(eventImage(event))}" alt="${escapeHTML(event.imageAlt || event.title)}"><div class="detail-photo-note"><div class="eyebrow">A LITTLE MORE OFFLINE</div><p>${escapeHTML(categoryNotes[event.category] || 'Good plans.\nBetter company.').replace(/\n/g,'<br>')}</p></div></div>
-    <div class="detail-content"><div class="detail-host"><img src="${escapeHTML(imageSrc(event.host?.image || 'avatar'))}" alt=""><div><strong>${escapeHTML(event.host?.name || state.profile.name)}</strong>is bringing people together</div></div>
+    <div class="detail-content"><div class="detail-host"><img src="${escapeHTML(BroncoAPI.mode === 'live' && !event.sample ? avatarImage(event.host || state.profile) : imageSrc(event.host?.image || 'avatar'))}" alt=""><div><strong>${escapeHTML(event.host?.name || state.profile.name)}</strong>is bringing people together</div></div>
       <span class="detail-category">${escapeHTML(categoryLabels[event.category] || event.category)}${event.sample ? ' · Sample plan' : ''}</span><h2 id="event-title">${escapeHTML(event.title)}</h2>
       <div class="detail-meta"><div>${icon('calendar')}<div><strong>${longDate(event)}</strong><small>${timeRange(event)} · Pacific time</small></div></div><div>${icon('pin')}<div><strong>${escapeHTML(event.location)}</strong><small>Cal Poly Pomona campus</small></div></div><div>${icon('users')}<div><strong>${attendance(event)} of ${capacityLabel(event)} spots filled</strong><small>${remaining?`${remaining} ${remaining===1?'spot':'spots'} left · `:''}${escapeHTML(event.cost || 'Free to join')}</small></div></div></div>
       <p class="detail-description">${escapeHTML(event.description)}</p><div class="host-note"><span>💬</span><div>${escapeHTML(event.note)}</div></div>
