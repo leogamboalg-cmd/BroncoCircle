@@ -6,7 +6,7 @@ export async function findPlans(req,res) {
   if(typeof query!=='string' || !query.trim() || query.length>500 || !Array.isArray(events) || events.length>50) {
     return res.status(400).json({error:'Enter a request up to 500 characters and at most 50 events.'});
   }
-  return res.json(await recommendEvents(query.trim(),events,askAI));
+  return res.json(await recommendEvents(query.trim(),events,prompt=>askAI(prompt,{json:true})));
 }
 
 export async function generateAIResponse(req, res) {

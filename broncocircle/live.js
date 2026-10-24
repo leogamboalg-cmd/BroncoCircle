@@ -375,7 +375,7 @@
     });
     setBusy(form,true); results.replaceChildren(); message.textContent='Finding plans for you…';
     try {
-      const response=await api.request('/ai/recommend-events',{method:'POST',body:{query,events:eventsForAI}});
+      const response=await api.request('/ai/recommend-events',{method:'POST',body:{query,events:eventsForAI},timeoutMs:40000});
       message.textContent=response.mode==='keywords'?'AI is unavailable right now. Here are keyword matches:':response.recommendations.length?'Plans picked for you:':'No matching upcoming plans with open spots. Try another request or create one!';
       for(const pick of response.recommendations) {
         const plan=getEvent(pick.id); if(!plan) continue;
