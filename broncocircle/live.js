@@ -44,6 +44,7 @@
   }
   function resetSession() {
     dataVersion++;
+    try { sessionStorage.removeItem('broncocircle-return-to'); } catch { /* In-memory logout still works. */ }
     api.setToken(''); profile = null; viewedProfile = null; records = []; social = null;
     state.joined = []; state.saved = [];
     state.profile = { name: 'Your profile', handle: '', bio: 'Sign in to make plans with your campus.' };
@@ -118,8 +119,18 @@
     if (!profile) { showProfileForm(); return false; }
     return true;
   }
+  function authReturn(value) {
+    try {
+      const target = new URL(value, location.origin);
+      if (target.origin !== location.origin || !['/index.html','/discover.html'].includes(target.pathname)) return null;
+      // Student selection is browsing context, never the identity to show after login.
+      target.searchParams.delete('student');
+      return target;
+    } catch { return null; }
+  }
   function showAuth() {
-    try { sessionStorage.setItem('broncocircle-return-to', location.pathname + location.search + location.hash); } catch { /* Login still returns to your profile. */ }
+    const target = authReturn(location.href);
+    try { sessionStorage.setItem('broncocircle-return-to', target ? target.pathname + target.search + target.hash : '/index.html'); } catch { /* Login still returns to your profile. */ }
     location.assign('/login/');
   }
   function formError(message) { $('#form-error').textContent = message; $('#form-error').hidden = false; }
@@ -305,6 +316,7 @@
     const navigationAvatar = $('.nav-profile');
     if (navigationAvatar) navigationAvatar.style.backgroundImage = `url("${avatarImage(profile || state.profile)}")`;
     if (isDiscoverPage) { document.title = 'Discover · BroncoCircle'; return; }
+    $('.profile').hidden = !profile;
     const shown = viewedProfile || profile || state.profile;
     $('#profile-name').textContent = shown.name || 'Your profile';
     $('#profile-handle').textContent = [shown.handle ? `@${shown.handle}` : '', shown.pronouns].filter(Boolean).join(' · ');
@@ -363,8 +375,8 @@
       let returnTo = '';
       try { returnTo = sessionStorage.getItem('broncocircle-return-to') || ''; sessionStorage.removeItem('broncocircle-return-to'); } catch { /* Open your profile if storage is unavailable. */ }
       if (returnTo) {
-        const target = new URL(returnTo, location.origin);
-        if (target.origin === location.origin && ['/index.html', '/discover.html'].includes(target.pathname) && target.href !== location.href) {
+        const target = authReturn(returnTo);
+        if (target && target.href !== location.href) {
           location.replace(target.href); return;
         }
       }
