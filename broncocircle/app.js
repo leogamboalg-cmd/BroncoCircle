@@ -321,10 +321,7 @@ $('#reset-filters').addEventListener('click',()=>{$('#search').value='';setFilte
 $('#edit-profile')?.addEventListener('click',showEditForm);
 $('#share-profile')?.addEventListener('click',()=>shareEvent());
 $('#nav-search').addEventListener('click',()=>{
-  const panel = $('#nav-search-panel');
-  panel.hidden = !panel.hidden;
-  $('#nav-search').setAttribute('aria-expanded', String(!panel.hidden));
-  if (!panel.hidden) $('#search').focus();
+  window.location.assign('search.html');
 });
 $$('[data-nav]').forEach(button=>button.addEventListener('click',()=>{
   const nav=button.dataset.nav;
