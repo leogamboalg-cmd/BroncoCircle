@@ -1,0 +1,11 @@
+import { readFile } from 'node:fs/promises';
+import { askAI } from '../services/aiService.js';
+const url=process.argv[2];
+if(!url) throw new Error('Usage: node scripts/checkLaptopAI.js https://your-tunnel.trycloudflare.com');
+const token=(await readFile(new URL('../.ai-relay.env',import.meta.url),'utf8')).match(/^AI_RELAY_TOKEN=(\S+)$/m)?.[1];
+if(!token) throw new Error('Start npm run ai:relay first.');
+process.env.AI_RELAY_URL=url; process.env.AI_RELAY_TOKEN=token;
+const response=await askAI('Return only JSON with this exact shape: {"connected":true}',{json:true});
+const result=JSON.parse(response);
+if(result.connected!==true) throw new Error('AI returned an unexpected response.');
+console.log('Public tunnel → authenticated laptop relay → Ollama: connected.');

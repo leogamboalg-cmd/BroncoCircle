@@ -5,6 +5,7 @@
   "description": "BroncoCircle Express API with in-memory CPP community data",
   "main": "server.js",
   "scripts": {
+    "ai:relay": "node scripts/aiRelay.js",
     "start": "node --env-file-if-exists=.env server.js",
     "dev": "node --env-file-if-exists=.env --watch server.js",
     "seed:matching": "node --env-file-if-exists=.env scripts/seedMatching.js",

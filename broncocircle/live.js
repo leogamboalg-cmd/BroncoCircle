@@ -362,6 +362,32 @@
     showInfo('Make time for your campus', '<p class="info-body">Create an event, invite people, and keep your plans together. Events, comments, RSVPs, and saved plans are shared through your account. Event times are shown in Pacific time.</p>');
   }, { capture: true });
   document.addEventListener('visibilitychange', ()=>{ if (!document.hidden && profile) refresh().catch(failure); });
+  if(isDiscoverPage) $('#plan-finder-form').addEventListener('submit',async event=>{
+    event.preventDefault();
+    const form=event.currentTarget, message=$('#plan-finder-status'), results=$('#plan-finder-results');
+    if(form.dataset.busy) return;
+    if(api.mode!=='live') {message.textContent='Open the live app and sign in to get recommendations.';return;}
+    if(!ensureProfile()) return;
+    const query=$('#plan-request').value.trim(); if(!query) return;
+    const eventsForAI=events().slice(0,50).flatMap(plan=>{
+      try {return [{id:plan.id,title:plan.title,category:plan.category,location:plan.location,description:plan.description,
+        start:api.pacificTime(plan.date,plan.start),spots:spots(plan)===Infinity?null:spots(plan)}];} catch {return [];}
+    });
+    setBusy(form,true); results.replaceChildren(); message.textContent='Finding plans for you…';
+    try {
+      const response=await api.request('/ai/recommend-events',{method:'POST',body:{query,events:eventsForAI},timeoutMs:40000});
+      message.textContent=response.mode==='keywords'?'AI is unavailable right now. Here are keyword matches:':response.recommendations.length?'Plans picked for you:':'No matching upcoming plans with open spots. Try another request or create one!';
+      for(const pick of response.recommendations) {
+        const plan=getEvent(pick.id); if(!plan) continue;
+        const card=document.createElement('div'); card.className='plan-pick';
+        const button=document.createElement('button'); button.type='button'; button.className='button button-outline'; button.dataset.open=plan.id; button.textContent=plan.title;
+        const reason=document.createElement('p'); reason.textContent=pick.reason;
+        const when=document.createElement('small'); when.textContent=`${longDate(plan)} · ${timeRange(plan)} Pacific · ${plan.location}${plan.sample?' · Sample plan':''}`;
+        card.append(button,reason,when); results.append(card);
+      }
+    } catch(error) {message.textContent=error.message;}
+    finally {setBusy(form,false);}
+  });
   api.ready.then(async () => {
     if (api.mode === 'demo') {
       status('Demo preview — plans and changes stay in this browser.');
