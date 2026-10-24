@@ -12,6 +12,7 @@ function postDetails(post, profile) {
   result.isSaved = (profile.savedPosts || []).some(id => String(id) === String(post._id));
   result.isHost = String(result.author?._id || result.author) === String(profile._id);
   result.isFriend = (profile.friends || []).some(id => String(id) === String(result.author?._id || result.author));
+  result.isFollowing = result.isFriend;
   if (result.event) {
     const attendees = result.event.attendees || [];
     result.attendeeCount = attendees.length;
@@ -24,14 +25,14 @@ function postDetails(post, profile) {
 export async function getPosts(req, res) {
   const filter = req.query.mine === "true" ? { author: req.profile._id } : {};
   const view = req.query.view;
-  if (view && !["discover", "hosting", "going", "saved", "friends"].includes(view)) {
-    return res.status(400).json({ error: "Choose discover, hosting, going, saved, or friends." });
+  if (view && !["discover", "hosting", "going", "saved", "friends", "following"].includes(view)) {
+    return res.status(400).json({ error: "Choose discover, hosting, going, saved, or following." });
   }
   if (view) filter.event = { $ne: null };
   if (view === "hosting") filter.author = req.profile._id;
   if (view === "going") filter["event.attendees"] = req.profile._id;
   if (view === "saved") filter._id = { $in: req.profile.savedPosts || [] };
-  if (view === "friends") filter.author = { $in: req.profile.friends || [] };
+  if (view === "friends" || view === "following") filter.author = { $in: req.profile.friends || [] };
   if (req.query.author) {
     if (!isObjectIdOrHexString(req.query.author)) return res.status(400).json({ error: "Invalid author ID." });
     // Keep view restrictions when an author filter is also supplied.

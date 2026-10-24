@@ -103,6 +103,7 @@ function applyProfile() {
   if (BroncoAPI.mode !== 'demo') return window.LiveApp?.applyProfile();
   const name = state.profile.name;
   if (isDiscoverPage) { document.title = 'Discover · BroncoCircle'; return; }
+  $('.profile').hidden = false;
   $('#profile-name').innerHTML = `${escapeHTML(name)} <span class="verified" aria-label="Campus verified">${icon('check')}</span>`;
   $('#profile-handle').innerHTML = `@${escapeHTML(state.profile.handle)} <span>·</span> he/him`;
   $('#profile-bio').innerHTML = escapeHTML(state.profile.bio).replace(/\n/g,'<br>');

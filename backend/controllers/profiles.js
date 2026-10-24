@@ -21,9 +21,9 @@ export async function getProfile(req, res) {
   return res.json(profile);
 }
 
-// Friends is the current user's private list, matching the Friends feed filter.
+// Keep the legacy field/endpoint compatible while exposing follow semantics.
 export async function setFriend(req, res) {
-  if (String(req.profile._id) === req.params.id) return res.status(400).json({ error: "Choose another profile." });
+  if (String(req.profile._id).toLowerCase() === req.params.id.toLowerCase()) return res.status(400).json({ error: "You cannot follow yourself." });
   if (req.method === "PUT" && !await Profile.exists({ _id: req.params.id })) {
     return res.status(404).json({ error: "Profile not found." });
   }
@@ -31,7 +31,16 @@ export async function setFriend(req, res) {
   const updated = await Profile.findByIdAndUpdate(req.profile._id,
     req.method === "DELETE" ? { $pull: change } : { $addToSet: change }, { new: true });
   if (!updated) return res.status(404).json({ error: "Profile not found." });
-  return res.json({ friends: updated.friends });
+  return res.json({ friends: updated.friends, following: updated.friends,
+    isFollowing: updated.friends.some(id => String(id).toLowerCase() === req.params.id.toLowerCase()) });
+}
+
+export async function getSocial(req, res) {
+  const target = await Profile.findById(req.params.id).select('friends');
+  if (!target) return res.status(404).json({ error: "Profile not found." });
+  const followers = await Profile.countDocuments({ friends: target._id });
+  return res.json({ followers, following: (target.friends || []).length,
+    isFollowing: (req.profile.friends || []).some(id => String(id).toLowerCase() === req.params.id.toLowerCase()) });
 }
 
 export async function getMyProfile(req, res) {

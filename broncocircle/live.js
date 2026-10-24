@@ -4,11 +4,12 @@
   const api = window.BroncoAPI;
   let profile = null;
   let viewedProfile = null;
+  let social = null;
   let accountName = '';
   let records = [];
   let dataVersion = 0;
   const samplePlans = [...sampleEvents, ...discoveryEvents].map(event => ({
-    ...event, sample: true, host: event.host || { name: 'Los Chulos', initials: 'JP', image: 'avatar' }
+    ...event, sample: true, host: { ...(event.host || { name: 'Los Chulos', initials: 'JP', image: 'avatar' }), friend:false }
   }));
   const pending = new Set();
   const eventImages = new WeakMap();
@@ -18,8 +19,13 @@
   const sessionBar = document.createElement('section');
   sessionBar.className = 'session-bar';
   sessionBar.setAttribute('aria-label', 'Account');
-  sessionBar.innerHTML = '<p id="session-status" role="status">Connecting…</p><div><a class="button button-outline" href="search.html">Find students &amp; events</a><button class="button button-outline" id="student-friend" hidden>Add to Friends</button><button class="button button-outline" id="session-login">Sign in</button><button class="button button-outline" id="session-refresh" hidden>Refresh</button><button class="button button-outline" id="session-logout" hidden>Sign out</button></div>';
+  sessionBar.innerHTML = '<p id="session-status" role="status">Connecting…</p><div><a class="button button-outline" href="search.html">Find students &amp; events</a><button class="button button-outline" id="student-friend" hidden>Follow</button><button class="button button-outline" id="session-login">Sign in</button><button class="button button-outline" id="session-refresh" hidden>Refresh</button><button class="button button-outline" id="session-logout" hidden>Sign out</button></div>';
   $('main').prepend(sessionBar);
+  if (!isDiscoverPage) {
+    $('.profile-buttons').append($('#student-friend'));
+    const counts = document.createElement('p'); counts.id = 'profile-social'; counts.className = 'profile-social';
+    $('.profile-copy').append(counts);
+  }
   const status = text => { $('#session-status').textContent = text; };
   const ownPage = () => !viewedProfile || viewedProfile._id === profile?._id;
   const render = () => {
@@ -38,7 +44,8 @@
   }
   function resetSession() {
     dataVersion++;
-    api.setToken(''); profile = null; viewedProfile = null; records = [];
+    try { sessionStorage.removeItem('broncocircle-return-to'); } catch { /* In-memory logout still works. */ }
+    api.setToken(''); profile = null; viewedProfile = null; records = []; social = null;
     state.joined = []; state.saved = [];
     state.profile = { name: 'Your profile', handle: '', bio: 'Sign in to make plans with your campus.' };
     closeDialogs(); sessionUI(); render();
@@ -78,13 +85,15 @@
     if (!profile) return;
     const version = ++dataVersion;
     const token = api.token;
-    const views = await Promise.all(['discover', 'hosting', 'going', 'saved', 'friends'].map(view=>api.request(`/posts?view=${view}`)));
+    const views = await Promise.all(['discover', 'hosting', 'going', 'saved', 'following'].map(view=>api.request(`/posts?view=${view}`)));
     const target = new URLSearchParams(location.search).get('student');
     let student = null;
     if (target && !isDiscoverPage) student = await api.request(`/profiles/${encodeURIComponent(target)}`);
     const extra = student && student._id !== profile._id ? await api.request(`/posts?view=discover&author=${student._id}`) : [];
+    const counts = await api.request(`/profiles/${(student || profile)._id}/social`);
     if (token !== api.token || version !== dataVersion) return;
     viewedProfile = student;
+    social = counts;
     records = [...new Map([...views.flat(), ...extra].map(post=>[post._id, post])).values()].filter(post=>post.event).map(mapPost);
     synchronize(); render(); sessionUI();
   }
@@ -110,8 +119,18 @@
     if (!profile) { showProfileForm(); return false; }
     return true;
   }
+  function authReturn(value) {
+    try {
+      const target = new URL(value, location.origin);
+      if (target.origin !== location.origin || !['/index.html','/discover.html'].includes(target.pathname)) return null;
+      // Student selection is browsing context, never the identity to show after login.
+      target.searchParams.delete('student');
+      return target;
+    } catch { return null; }
+  }
   function showAuth() {
-    try { sessionStorage.setItem('broncocircle-return-to', location.pathname + location.search + location.hash); } catch { /* Login still returns to your profile. */ }
+    const target = authReturn(location.href);
+    try { sessionStorage.setItem('broncocircle-return-to', target ? target.pathname + target.search + target.hash : '/index.html'); } catch { /* Login still returns to your profile. */ }
     location.assign('/login/');
   }
   function formError(message) { $('#form-error').textContent = message; $('#form-error').hidden = false; }
@@ -297,6 +316,7 @@
     const navigationAvatar = $('.nav-profile');
     if (navigationAvatar) navigationAvatar.style.backgroundImage = `url("${avatarImage(profile || state.profile)}")`;
     if (isDiscoverPage) { document.title = 'Discover · BroncoCircle'; return; }
+    $('.profile').hidden = !profile;
     const shown = viewedProfile || profile || state.profile;
     $('#profile-name').textContent = shown.name || 'Your profile';
     $('#profile-handle').textContent = [shown.handle ? `@${shown.handle}` : '', shown.pronouns].filter(Boolean).join(' · ');
@@ -308,25 +328,34 @@
     $('.online-dot').hidden = true;
     $('#edit-profile').hidden = !ownPage();
     $('#student-friend').hidden = !profile || ownPage();
-    $('#student-friend').textContent = (profile?.friends || []).includes(shown._id) ? 'Remove from Friends' : 'Add to Friends';
+    const following = (profile?.friends || []).includes(shown._id);
+    $('#student-friend').textContent = following ? 'Unfollow' : 'Follow';
+    $('#student-friend').setAttribute('aria-pressed', String(following));
+    $('#student-friend').disabled = pending.has(`follow:${shown._id}`);
+    $('#profile-social').textContent = social ? `${social.followers} followers · ${social.following} following` : '';
     document.title = `${shown.name || 'Your profile'} · BroncoCircle`;
   }
   window.LiveApp = { get events() { return profile ? [...records, ...samplePlans] : []; }, isHosted: event=>event.authorId === (viewedProfile || profile)?._id,
     ensureProfile, applyProfile: applyLiveProfile, showProfileForm, saveProfile, setupProfileImage, createEvent, setupEventImage,
-    toggleSave: id=>changeEvent(id,'save'), toggleRSVP: id=>changeEvent(id,'rsvp'), refreshDetail, addComment };
+    toggleSave: id=>changeEvent(id,'save'), toggleRSVP: id=>changeEvent(id,'rsvp'), refreshDetail, addComment, toggleFollow,
+    isFollowing: id=>(profile?.friends || []).includes(id), isSelf: id=>id === profile?._id };
   $('#session-login').onclick = showAuth;
   $('#session-logout').onclick = resetSession;
   $('#session-refresh').onclick = () => refresh().catch(failure);
-  $('#student-friend').onclick = async () => {
-    if (!profile || !viewedProfile || pending.has('friend')) return;
-    pending.add('friend');
+  async function toggleFollow(id) {
+    if (!ensureProfile() || !id || id === profile._id || pending.has(`follow:${id}`)) return;
+    const key = `follow:${id}`;
+    pending.add(key); render();
     try {
-      const removing = (profile.friends || []).includes(viewedProfile._id);
-      const result = await api.request(`/profiles/${viewedProfile._id}/friend`, { method: removing ? 'DELETE' : 'PUT' });
-      profile.friends = result.friends; await refresh(); notify(removing ? 'Removed from Friends.' : 'Added to your Friends feed.');
+      const removing = (profile.friends || []).includes(id);
+      const result = await api.request(`/profiles/${id}/follow`, { method: removing ? 'DELETE' : 'PUT' });
+      profile.friends = result.following; records.forEach(event=>{ event.host.friend = profile.friends.includes(event.authorId); });
+      render(); await refresh(); notify(removing ? 'Unfollowed.' : 'Following! Their plans appear in Following.');
     } catch (error) { failure(error); }
-    finally { pending.delete('friend'); }
-  };
+    finally { pending.delete(key); render(); }
+  }
+  $('#student-friend').onclick = () => toggleFollow(viewedProfile?._id);
+  document.addEventListener('click', event=>{ const button = event.target.closest('[data-follow]'); if (button) toggleFollow(button.dataset.follow); });
   $('#about-btn').addEventListener('click', event => {
     if (api.mode !== 'live') return;
     event.stopImmediatePropagation();
@@ -346,8 +375,8 @@
       let returnTo = '';
       try { returnTo = sessionStorage.getItem('broncocircle-return-to') || ''; sessionStorage.removeItem('broncocircle-return-to'); } catch { /* Open your profile if storage is unavailable. */ }
       if (returnTo) {
-        const target = new URL(returnTo, location.origin);
-        if (target.origin === location.origin && ['/index.html', '/discover.html'].includes(target.pathname) && target.href !== location.href) {
+        const target = authReturn(returnTo);
+        if (target && target.href !== location.href) {
           location.replace(target.href); return;
         }
       }

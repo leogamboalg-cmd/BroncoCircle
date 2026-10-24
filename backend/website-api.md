@@ -46,10 +46,20 @@ it does not delete the old Cloudinary asset. Other users' photos are unchanged.
 Profiles without photos display their own initials. Real event hosts,
 comments, attendees, navigation, and student search use each profile's photo.
 
-`PUT /api/profiles/:id/friend` adds a profile to your private Friends feed list;
-`DELETE` removes it. This is a one-way list, not mutual friendship or a friend
-request system. Both operations are idempotent. Lists cannot be overwritten
-through profile create/edit requests.
+`PUT /api/profiles/:id/follow` follows a profile; `DELETE` unfollows it. Both
+are idempotent and act only on the authenticated profile. Self-follow attempts
+are rejected. The response includes the current `following` ID list and
+`isFollowing`. Existing `/friend` endpoints remain compatible aliases.
+
+`GET /api/profiles/:id/social` returns follower/following counts and the viewer's
+`isFollowing` state without exposing private lists. Follow/Unfollow controls
+appear on other students' profiles and real event posts. Find students through
+search or click an event host's name. The Following tab shows their plans.
+
+MongoDB continues storing follows in `Profile.friends`, the existing one-way
+list, so previous data needs no migration. An index supports follower counts.
+Following does not require approval or make the other person follow you back.
+Lists cannot be overwritten through profile create/edit requests.
 
 ## Create events
 
@@ -113,16 +123,17 @@ be configured in `backend/.env`; provider secrets never go into the website.
 
 ## Tabs, event actions, and comments
 
-`GET /api/posts?view=discover|hosting|going|saved|friends` loads the corresponding
+`GET /api/posts?view=discover|hosting|going|saved|following` loads the corresponding
 event feed. With no `view`, existing text/photo posts remain included. `mine=true`
 is still supported. Optional `author=PROFILE_ID`, `category=Games`, and `q=coffee`
 filter results. Event search matches description, title, location, and category;
 student search is separate. Search is literal and capped at 200 characters.
 Feeds return the newest 50 matching posts; full pagination is not implemented.
-The UI can sort these results by event time or remaining spots.
+The UI can sort these results by event time or remaining spots. The old
+`view=friends` is a compatible alias for `view=following`.
 
 `GET /api/posts/:id` returns details. Feed/detail responses include `isHost`, `isSaved`, and
-`isFriend`; events also include `isGoing`, `attendeeCount`, `spotsRemaining`,
+`isFollowing` (also available as the legacy `isFriend`); events also include `isGoing`, `attendeeCount`, `spotsRemaining`,
 populated author, attendees, and comment authors. Profile metadata now includes
 handles, and the host includes a bio. Existing category, note, image URL, and
 date fields remain available.
